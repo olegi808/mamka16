@@ -1,0 +1,1184 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Мамка в 16</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --bg1:#2a0f2e; --bg2:#12061a; --card:#fff6f8; --ink:#2b1630; --muted:#8b6b90;
+    --pink:#ff4f9a; --pink2:#ff86bd; --gold:#ffc83d; --red:#ff3b3b; --ok:#3ddc97;
+    --panel:rgba(255,255,255,.08); --line:rgba(255,255,255,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg2);color:#fff;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden}
+  #app{max-width:430px;height:100%;margin:0 auto;position:relative;background:radial-gradient(120% 70% at 50% 0%,#5a1a55 0%,var(--bg1) 45%,var(--bg2) 100%);display:flex;flex-direction:column;overflow:hidden}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column}
+  .screen.on{display:flex}
+  button{font:inherit;border:0;cursor:pointer}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 12px 2px;font-size:13px}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 11px;display:flex;gap:6px;align-items:center;color:#fff;white-space:nowrap}
+  .chap{font-weight:700;overflow:hidden;text-overflow:ellipsis;flex:1;justify-content:center}
+  .stats{display:flex;justify-content:space-around;padding:8px 10px 4px}
+  .stat{display:flex;flex-direction:column;align-items:center;gap:3px;width:56px;position:relative;cursor:pointer}
+  .stat .ico{width:40px;height:40px;border-radius:13px;background:var(--panel);border:1px solid var(--line);position:relative;overflow:hidden;display:grid;place-items:center;font-size:20px}
+  .stat .fill{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(0deg,var(--pink),var(--pink2));opacity:.8;transition:height .45s cubic-bezier(.2,.9,.3,1.2)}
+  .stat.danger .fill{background:linear-gradient(0deg,var(--red),#ff8a6b);animation:pulse 1s infinite}
+  .stat.locked{opacity:.3}
+  .stat .ico span{position:relative;z-index:1}
+  .stat .lbl{font-size:10px;color:#e8cde9;opacity:.8}
+  .stat .dot{position:absolute;top:-6px;width:8px;height:8px;border-radius:50%;background:#fff;opacity:0;transition:all .15s}
+  .stat .dot.big{width:12px;height:12px;top:-8px}
+  .stat .delta{position:absolute;top:10px;font-weight:800;font-size:14px;opacity:0;pointer-events:none}
+  .stat .delta.show{animation:floatup .9s ease-out}
+  @keyframes floatup{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-26px)}}
+  @keyframes pulse{50%{opacity:.45}}
+
+  .stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:4px 14px 12px}
+  .who{font-size:12.5px;color:#f3d6f2;margin:2px 0 6px;display:flex;align-items:center;gap:6px}
+  .who b{color:#fff}
+  .deck{position:relative;width:100%;max-width:360px;flex:1;min-height:0}
+  .card{position:absolute;inset:0;background:var(--card);color:var(--ink);border-radius:24px;box-shadow:0 20px 50px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden;touch-action:none;user-select:none;will-change:transform}
+  .card.back{transform:scale(.95) translateY(10px);opacity:.45}
+  .card .art .heroart{object-position:center 28%;animation:kb 18s ease-in-out infinite alternate;transform-origin:50% 35%}
+  @keyframes kb{from{transform:scale(1.02)}to{transform:scale(1.12) translateY(-2%)}}
+  .bigemo .avatar{width:150px;height:150px;border-radius:50%;object-fit:cover;object-position:center 25%;border:3px solid var(--pink2);display:block}
+  .card .art{flex:0 0 40%;position:relative;overflow:hidden;display:grid;place-items:end center}
+  .card .art .emo{font-size:84px;line-height:1;margin-bottom:10px;animation:breathe 4s ease-in-out infinite;transform-origin:50% 100%}
+  .card .art .portrait{position:absolute;bottom:0;left:50%;height:100%;transform:translateX(-50%);object-fit:contain;animation:breathe 4s ease-in-out infinite;transform-origin:50% 100%;pointer-events:none}
+  .card .art .scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+  .card .art.talk .emo,.card .art.talk .portrait{animation:talk .35s ease-out, breathe 4s ease-in-out infinite .35s}
+  @keyframes breathe{50%{transform:translateX(var(--tx,0)) scale(1.025) translateY(-2px)}}
+  @keyframes talk{0%{transform:translateX(var(--tx,0)) translateY(6px) scale(.97)}100%{transform:translateX(var(--tx,0))}}
+  .card .art .portrait{--tx:-50%}
+  .card .art .tag{position:absolute;top:10px;left:10px;font-size:10.5px;font-weight:800;background:rgba(0,0,0,.6);color:#fff;padding:4px 9px;border-radius:999px;letter-spacing:.3px;z-index:2}
+  .card .art .spk{position:absolute;bottom:8px;left:10px;font-size:11px;font-weight:800;background:#fff;color:var(--ink);padding:3px 9px;border-radius:999px;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .card .body{flex:1;overflow-y:auto;padding:12px 13px 52px;display:flex;flex-direction:column;gap:7px;scroll-behavior:smooth}
+  .nar{font-style:italic;color:#7a5a80;font-size:14px;line-height:1.38}
+  .msg{max-width:86%;padding:7px 11px 8px;border-radius:16px;font-size:15px;line-height:1.3;animation:pop .9s cubic-bezier(.22,1,.36,1) both}
+  .msg .sp{display:block;font-size:11px;font-weight:800;color:var(--pink);margin-bottom:1px}
+  .msg.them{align-self:flex-start;background:#efe4f1;border-bottom-left-radius:4px}
+  .msg.male .sp{color:#2f7cf6}
+  .card .art .spk.male{color:#2f7cf6}
+  .msg.me{align-self:flex-end;background:var(--pink);color:#fff;border-bottom-right-radius:4px}
+  .msg.me .sp{display:none}
+  .msg.thought{align-self:flex-end;background:none;color:#8b6b90;font-style:italic;padding:2px 4px;text-align:right}
+  .msg.thought .sp{display:none}
+  @keyframes pop{0%{opacity:0;transform:translateY(18px) scale(.96);filter:blur(3px)}60%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none;filter:none}}
+  .nar{animation:pop 1.1s cubic-bezier(.22,1,.36,1) both}
+  .skipall{position:absolute;right:10px;bottom:10px;z-index:4;background:rgba(43,22,48,.85);color:#fff;font-weight:700;font-size:12.5px;padding:8px 13px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.3);backdrop-filter:blur(4px);animation:pop .4s ease-out both}
+  .skipall:active{transform:scale(.95)}
+  .intro{display:flex;gap:10px;align-items:flex-start;background:linear-gradient(135deg,#fff,#fde9f3);border:1px solid #f3cde0;border-left:4px solid var(--pink);border-radius:14px;padding:9px 11px;animation:pop 1s cubic-bezier(.22,1,.36,1) both;box-shadow:0 3px 10px rgba(120,40,90,.08)}
+  .intro.male{border-left-color:#2f7cf6;background:linear-gradient(135deg,#fff,#e8f0fe);border-color:#cfe0fb}
+  .intro .ie{font-size:30px;line-height:1.1}
+  .intro .ie-img{width:48px;height:48px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .card .art .guyart{object-position:center 25%}
+  .intro .il{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--pink);margin-bottom:1px}
+  .intro.male .il{color:#2f7cf6}
+  .intro .in{font-weight:800;font-size:14.5px}
+  .intro .ir{font-weight:600;font-size:12px;color:#8b6b90}
+  .intro .id{font-size:13px;color:#4a2f50;line-height:1.38;margin-top:3px}
+  .card.narcard .body{justify-content:center;align-items:center;text-align:center;font-size:17px;line-height:1.45;font-weight:500;padding:20px}
+  .card.narcard .body .then{font-size:11px;letter-spacing:2px;color:var(--pink);font-weight:800;margin-bottom:8px}
+  .choice{position:absolute;top:14px;max-width:62%;background:#fff;color:var(--ink);font-weight:800;font-size:14px;padding:8px 12px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.25);opacity:0;pointer-events:none;z-index:3}
+  .choice.l{right:12px;transform:rotate(6deg);border:3px solid var(--pink)}
+  .choice.r{left:12px;transform:rotate(-6deg);border:3px solid var(--ok)}
+  .btns{display:flex;gap:10px;width:100%;max-width:360px;margin-top:12px}
+  .btns button{flex:1;padding:12px 10px;border-radius:16px;font-weight:700;font-size:13.5px;color:#fff;background:var(--panel);border:1px solid var(--line);line-height:1.2;transition:opacity .2s}
+  .btns button:disabled{opacity:.35}
+  .btns button.hide{display:none}
+  .btns button:active{transform:scale(.97)}
+
+  .nav{display:flex;justify-content:space-around;padding:8px 8px 14px;border-top:1px solid var(--line);background:rgba(0,0,0,.2)}
+  .nav button{background:none;color:#e9cdea;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 10px}
+  .nav button span{font-size:20px}
+
+  .hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+  .logo{font-size:44px;font-weight:900;line-height:1;letter-spacing:-1px;background:linear-gradient(90deg,#fff,var(--pink2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .logo small{display:block;font-size:15px;font-weight:600;letter-spacing:2px;color:var(--pink2);-webkit-text-fill-color:var(--pink2);margin-top:6px}
+  .bigemo{font-size:100px;margin:14px 0 4px;filter:drop-shadow(0 10px 30px rgba(255,79,154,.5))}
+  .girl{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:14px 16px;width:100%;max-width:330px;text-align:left;font-size:14px;line-height:1.6;margin:12px 0}
+  .girl b{color:var(--pink2)}
+  .cta{background:linear-gradient(90deg,var(--pink),#ff6f61);color:#fff;font-weight:800;font-size:17px;padding:16px 22px;border-radius:18px;width:100%;max-width:330px;box-shadow:0 10px 30px rgba(255,79,154,.45)}
+  .cta.gold{background:linear-gradient(90deg,#ffb800,#ff8a00);box-shadow:0 10px 30px rgba(255,170,0,.35);color:#2b1400}
+  .ghost{background:var(--panel);border:1px solid var(--line);color:#fff;font-weight:700;padding:13px 18px;border-radius:16px;width:100%;max-width:330px;margin-top:10px}
+  .small{font-size:12px;color:#d9b8dc;opacity:.75;margin-top:10px}
+
+  .head{padding:16px 16px 6px;font-size:22px;font-weight:800}
+  .sub{padding:0 16px 10px;color:#d9b8dc;font-size:13px}
+  .scroll{flex:1;overflow:auto;padding:4px 16px 16px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .end{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 6px;text-align:center;font-size:11px;line-height:1.25;min-height:100px;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:center}
+  .end .e{font-size:30px}
+  .end.locked{opacity:.4}
+  .ends-group{margin:0 0 18px}
+  .ends-group h3{display:flex;align-items:center;gap:8px;margin:4px 2px 10px;font-size:15px}
+  .ends-group h3 .cnt{margin-left:auto;font-size:12px;font-weight:700;opacity:.65}
+  .shopitem{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin-bottom:10px}
+  .shopitem .e{font-size:28px;width:52px;text-align:center;white-space:nowrap;letter-spacing:-8px}
+  .shopitem .t{flex:1;font-size:14px;line-height:1.3}
+  .shopitem .t b{display:block;font-size:15px}
+  .shopitem .t i{font-style:normal;color:#d9b8dc;font-size:12px}
+  .price{background:linear-gradient(90deg,#ffb800,#ff8a00);color:#2b1400;font-weight:800;border-radius:12px;padding:9px 12px;font-size:14px;white-space:nowrap}
+  .badge{display:inline-block;background:var(--pink);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
+
+  .modal{position:absolute;inset:0;background:rgba(10,0,15,.78);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+  .modal.on{display:flex}
+  .sheet{max-height:94%;overflow-y:auto;background:linear-gradient(180deg,#3a1440,#1c0a22);border:1px solid var(--line);border-radius:26px;padding:22px 18px;width:100%;max-width:360px;text-align:center;display:flex;flex-direction:column;align-items:center}
+  .sheet .e{font-size:76px;line-height:1}
+  .sheet h2{margin:10px 0 6px;font-size:22px}
+  .sheet p{margin:0 0 16px;color:#ecd3ee;font-size:14.5px;line-height:1.45}
+  .sheet .meta{font-size:12px;color:#d9b8dc;margin-bottom:14px}
+  .toast{position:absolute;left:50%;top:118px;transform:translateX(-50%);background:#fff;color:var(--ink);padding:10px 16px;border-radius:14px;font-weight:700;font-size:13px;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none;width:max-content;max-width:calc(100% - 32px);text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .toast.on{opacity:1}
+  .adbox{width:100%;aspect-ratio:16/9;background:#000;border-radius:16px;display:grid;place-items:center;font-size:14px;color:#aaa;margin-bottom:14px}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section class="screen on" id="s-menu">
+    <div class="topbar">
+      <div class="pill" id="m-energy">⚡ 3/3</div>
+      <button class="pill music-btn" id="m-music">🎵</button>
+      <div class="pill">⭐ <span id="m-stars">0</span></div>
+    </div>
+    <div class="hero">
+      <div class="logo">МАМКА<br>В 16<small>СИМУЛЯТОР ВЫЖИВАНИЯ</small></div>
+      <div class="bigemo" id="m-avatar">🤰</div>
+      <div class="girl" id="girl"></div>
+      <button class="cta" id="btn-start">Начать историю · ⚡1</button>
+      <button class="ghost" id="btn-cast">👥 Кто есть кто</button>
+      <button class="ghost" id="btn-reroll">🎲 Случайная героиня</button>
+      <div class="small">Открыто концовок: <b id="m-ends">0</b> / <span id="m-ends-total"></span></div>
+    </div>
+    <nav class="nav">
+      <button data-go="menu"><span>🏠</span>Игра</button>
+      <button data-go="ends"><span>🏆</span>Концовки</button>
+      <button data-go="shop"><span>⭐</span>Магазин</button>
+    </nav>
+  </section>
+
+  <section class="screen" id="s-game">
+    <div class="topbar">
+      <button class="pill" id="btn-exit">✕</button>
+      <div class="pill chap" id="g-chap">Глава 1</div>
+      <button class="pill" id="g-cast">👥</button>
+      <button class="pill music-btn" id="g-music">🎵</button>
+      <div class="pill" id="g-week">—</div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="stage">
+      <div class="who" id="who"></div>
+      <div class="deck" id="deck"></div>
+      <div class="btns">
+        <button id="btn-l">←</button>
+        <button id="btn-r">→</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-ends">
+    <div class="head">🏆 Концовки</div>
+    <div class="sub">Концовка зависит от того, кто твой парень, и от твоих решений.</div>
+    <div class="scroll"><div id="ends-grid"></div></div>
+    <nav class="nav">
+      <button data-go="menu"><span>🏠</span>Игра</button>
+      <button data-go="ends"><span>🏆</span>Концовки</button>
+      <button data-go="shop"><span>⭐</span>Магазин</button>
+    </nav>
+  </section>
+
+  <section class="screen" id="s-shop">
+    <div class="head">⭐ Магазин</div>
+    <div class="sub">Оплата через Telegram Stars (в прототипе — заглушка)</div>
+    <div class="scroll" id="shop-list"></div>
+    <nav class="nav">
+      <button data-go="menu"><span>🏠</span>Игра</button>
+      <button data-go="ends"><span>🏆</span>Концовки</button>
+      <button data-go="shop"><span>⭐</span>Магазин</button>
+    </nav>
+  </section>
+
+  <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="story.js"></script>
+<script src="story_karina.js"></script>
+<script src="story_alina.js"></script>
+<script src="story_vika.js"></script>
+<script src="music.js"></script>
+<script>
+/* =====================================================================
+   ПЕРСОНАЖИ
+   Картинки персонажей: img/char/<key>.png (прозрачный фон, в полный рост/по пояс)
+   Картинки сцен:       img/scene/<id сцены>.jpg
+   Если файла нет — показывается эмодзи.
+   ===================================================================== */
+
+// Концовки
+const ENDS = {
+  m0:  {e:'📉', t:'Коллекторы забрали всё', d:'Даже коляску. И зарядку от телефона.'},
+  m100:{e:'💎', t:'Подозрительно богатая', d:'Откуда деньги — вопрос к следователю.'},
+  n100:{e:'🤯', t:'Нервы сдали', d:'Уехала к бабке в деревню. Вай-фая там нет.'},
+  p0:  {e:'🚪', t:'Выгнали из дома', d:'Чемодан на лестнице. Замки сменили.'},
+  p100:{e:'👵', t:'Семья забрала ребёнка', d:'Теперь по документам ты ей сестра.'},
+  g0:  {e:'👻', t:'Он исчез', d:'Удалил ВК, сменил номер, уехал «на вахту».'},
+  g100:{e:'💍', t:'Свадьба в столовой', d:'Медовый месяц — у свекрови на диване.'},
+  b0:  {e:'🏛️', t:'Пришла опека', d:'Проверка. Акт. Суд. Сериал продолжается.'},
+  b100:{e:'🧸', t:'Сумасшедшая мамаша', d:'Все деньги на развивашки. Ей год, она учит китайский.'},
+  f_prison:  {e:'⛓️', t:'Жена декабриста', d:'Ждёшь его. Передачки по четвергам, свидания раз в квартал.'},
+  f_alliance:{e:'🤝', t:'Клуб бывших', d:'Вы с Кристиной лучшие подруги. Он платит алименты двум семьям.'},
+  f_rival:   {e:'🥊', t:'Делим одного', d:'Он живёт на две семьи. Ты знаешь. Она знает. Все делают вид.'},
+  f_blog:    {e:'📱', t:'Мамка-блогерша', d:'Миллион подписчиков, реклама подгузников, хейт в комментах.'},
+  f_tv:      {e:'📺', t:'Звезда шоу', d:'Тебя узнают в магазине. Не всегда с хорошей стороны.'},
+  f_svek:    {e:'🍲', t:'Невестка навсегда', d:'Живёшь у его мамы. Её дом — её правила. Навсегда.'},
+  f_distance:{e:'🚆', t:'Любовь на расстоянии', d:'Он в Москве, ты с дочкой дома. Видеозвонки по воскресеньям.'},
+  f_family:  {e:'🏠', t:'Почти нормальная семья', d:'Съёмная однушка, вы втроём. Странно, но работает.'},
+  f_solo:    {e:'💪', t:'Сама справилась', d:'Без него. Колледж заочно. Ты — легенда.'},
+  // концовки Насти
+  n_relapse: {e:'🔁', t:'Вернулся к пацанам', d:'Дэн продержался месяц. Ты собрала вещи и ушла к маме — с дочкой и без иллюзий.'},
+  n_clean:   {e:'🕊️', t:'Он завязал', d:'Дэн вышел и не вернулся к старому. Грузчик днём, папа вечером. Тяжело, но вы вместе.'},
+  n_shino:   {e:'🔧', t:'Шиномонтаж и борщ', d:'Дэн чинит колёса у дяди Ашота, ты учишься на заочке. Денег мало, зато всё честно.'},
+  n_kostya:  {e:'🚑', t:'Новый человек', d:'Костя-фельдшер стал дочке почти папой. Дэн иногда пишет «как она?».'},
+  n_weekend: {e:'📅', t:'Папа по выходным', d:'Семьёй вы не стали, но по субботам Дэн гуляет с дочкой в парке. И это уже много.'},
+  n_grandpa: {e:'🧔', t:'Дед Игорь', d:'Главным мужчиной в жизни дочки стал Игорь. Кто бы мог подумать.'},
+  n_young:   {e:'💑', t:'Молодая семья', d:'Вам по восемнадцать, у вас дочь, штамп в паспорте и съёмная комната. И вы всё ещё держитесь за руки.'},
+  n_divorce: {e:'📝', t:'Развод в 18', d:'Брак продержался чуть больше года. Делите кредит за свадьбу и дочку по выходным.'},
+  n_vahta:   {e:'🚛', t:'Жена вахтовика', d:'Три месяца ждёшь, месяц вместе. Дочка узнаёт папу по голосу в телефоне.'},
+  n_return:  {e:'🏡', t:'Блудная дочь', d:'Питер вас не принял. Ты вернулась в Сызрань — к маме, пирожкам и своей комнате.'},
+  n_spb:     {e:'🌉', t:'Питерская однушка', d:'Своя однушка на окраине Питера, колледж, Дэн в автосервисе. А мама — на видеосвязи каждый вечер.'},
+  n_lost:    {e:'🌧️', t:'Одни в большом городе', d:'Вы остались в Питере, отрезав себя от дома. Чужой город, чужие люди и только вы втроём.'},
+  x_twins:   {e:'👶👶', t:'Сюрприз: двойня', d:'Премиум-ветка', prem:true},
+  x_moscow:  {e:'🏙️', t:'Сбежала в Москву', d:'Премиум-ветка', prem:true},
+};
+
+const SHOP = [
+  {id:'chance5',  e:'🔁', t:'Второй шанс ×5', d:'Откат на 3 хода назад после проигрыша', p:59},
+  {id:'energy10', e:'⚡', t:'Энергия ×10', d:'10 новых жизней', p:49},
+  {id:'sub',      e:'👑', t:'Подписка «Королева района»', d:'Безлимит энергии · без рекламы · все премиум-ветки', p:199, badge:'ХИТ', per:'/мес'},
+  {id:'twins',    e:'👶👶', t:'Ветка «Двойня»', d:'+12 сцен, 2 новые концовки', p:99},
+  {id:'moscow',   e:'🏙️', t:'Ветка «Сбежала в Москву»', d:'+15 сцен, 3 новые концовки', p:99},
+  {id:'hints20',  e:'🔮', t:'Подсказки ×20', d:'Показывает, куда двинется шкала', p:29},
+];
+
+/* ================= СОСТОЯНИЕ ================= */
+const tg = window.Telegram && window.Telegram.WebApp;
+try{ tg && tg.ready(); tg && tg.expand(); }catch(e){}
+const haptic = t => { try{ tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred(t||'light'); }catch(e){} };
+function load(k,d){ try{ const v=localStorage.getItem('m16_'+k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function save(k,v){ try{ localStorage.setItem('m16_'+k, JSON.stringify(v)); }catch(e){} }
+
+let meta = load('meta', {energy:3, stars:0, ends:[]});
+
+/* ================= СЕРВЕР (база игроков, статистика, оплата) =================
+   Игра работает и без сервера: если /api недоступен, всё остаётся как в прототипе. */
+const API_BASE = window.M16_API || 'api';
+let online = false;
+function api(path, body){
+  const ctrl = new AbortController(); const t = setTimeout(()=>ctrl.abort(), 8000);
+  return fetch(API_BASE + path, {method:'POST', headers:{'Content-Type':'application/json'}, signal:ctrl.signal,
+      body:JSON.stringify(Object.assign({initData: (tg && tg.initData) || ''}, body || {}))})
+    .then(r => r.ok ? r.json() : null).catch(()=>null).finally(()=>clearTimeout(t));
+}
+let player = null, botName = '';
+api('/auth').then(r => {
+  online = !!(r && r.ok); if(!online) return;
+  player = r.user; botName = r.bot || ''; if(r.payments) window.M16_PAY = true;
+  if(r.bonus > 0){ meta.energy += r.bonus; save('meta', meta); try{ renderMenu(); }catch(e){} setTimeout(()=>toast('👥 +' + r.bonus + ' ⚡ за приглашение', 3000), 800); }
+  grantAll(r.items);
+});
+function track(kind, extra){
+  if(!online) return;
+  api('/event', Object.assign({kind, hero: hero && hero.id, week: S && S.w}, extra || {}));
+}
+// «Позови подругу»: ссылка открывает игру с меткой ref_<id>, бонус начисляет сервер
+function invite(){
+  if(!(online && player && botName)){ toast('🔗 Приглашения работают, когда игра открыта в Telegram'); return; }
+  const link = `https://t.me/${botName}?startapp=ref_${player.id}`;
+  const text = 'Играю в «Мамку в 16» — залетай, нам обеим дадут по +3 ⚡';
+  const share = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+  try{ tg && tg.openTelegramLink ? tg.openTelegramLink(share) : window.open(share, '_blank'); }
+  catch(e){ navigator.clipboard && navigator.clipboard.writeText(link); toast('🔗 Ссылка скопирована'); }
+}
+// покупки, оплаченные раньше, но не выданные (например, игру закрыли сразу после оплаты)
+function grantAll(items){
+  if(!items || !items.length) return;
+  items.forEach(grant);
+  const names = items.map(id => (SHOP.find(s => s.id === id) || {t:'Второй шанс'}).t);
+  try{ renderMenu(); }catch(e){}
+  setTimeout(()=>toast('🎁 Покупка в игре: ' + names.join(', '), 3500), 1200);
+}
+// что даёт каждая покупка (прогресс хранится на устройстве)
+function grant(id){
+  meta.owned = meta.owned || {};
+  if(id==='chance1'){ meta.chances = (meta.chances||0) + 1; save('meta', meta); return; }  // оплаченный, но не использованный второй шанс
+  if(id==='energy10') meta.energy += 10;
+  else if(id==='chance5') meta.chances = (meta.chances||0) + 5;
+  else if(id==='hints20') meta.hints = (meta.hints||0) + 20;
+  else if(id==='sub') meta.subUntil = Date.now() + 30*24*3600*1000;
+  else meta.owned[id] = true;
+  save('meta', meta);
+}
+let hero = null, S = null, hist = [];
+const DIFF = 0.85;    // сила эффектов (больше — сложнее)
+const FILL_CHANCE = .5; // шанс бытовой сцены между главными
+// опасны ОБА края шкалы
+// подсказки по шкалам (нажатие на шкалу в игре)
+const STAT_HELP = {
+  m:{ what:'Сколько у тебя денег на жизнь и ребёнка.',
+      lo:'0 — коллекторы забрали всё.', hi:'100 — слишком много денег непонятно откуда.',
+      up:['Подработка, листовки','Взять займ или деньги у парня','Попросить у семьи','Заказ от бренда, ТВ-шоу'],
+      down:['Покупки: витамины, коляска, маникюр','Дать денег парню','Платить долги']},
+  n:{ what:'Сколько в твоей жизни стресса. Сами по себе нервы понемногу возвращаются к середине.',
+      lo:'Низкие нервы не опасны — это значит, что ты спокойна.', hi:'100 — нервы сдали, срыв.',
+      up:['Скандалы и ссоры','Враньё и тайны','«Я сама», всё тащить на себе','Бессонные ночи'],
+      down:['Принять помощь, «отдать и поспать»','Обнять, помириться','Отдохнуть: клуб, ноготочки','Не отвечать, отпустить ситуацию']},
+  p:{ what:'Насколько семья на твоей стороне.',
+      lo:'0 — тебя выгоняют из дома.', hi:'100 — семья решает всё за тебя, даже про ребёнка.',
+      up:['Слушаться, помогать по дому','Принять помощь, сказать «спасибо»','Учиться, поступить в колледж'],
+      down:['Врать, огрызаться','Уходить из дома, к парню','Брать долги, тусить']},
+  g:{ what:'Насколько вы с парнем вместе.',
+      lo:'0 — он исчезает.', hi:'100 — ты полностью растворилась в нём.',
+      up:['Соглашаться, прощать','Выбирать его, а не семью','Покрывать его'],
+      down:['Скандалы, «нет»','Блокировать, не отвечать','Выбирать себя или семью']},
+  b:{ what:'Здоровье и благополучие малыша.',
+      lo:'0 — приходит опека.', hi:'100 — гиперопека, всё остальное забыто.',
+      up:['Врачи, витамины, прививки','Самой вставать ночью','Оставаться дома с ребёнком'],
+      down:['Экономить на ребёнке','Вейп, энергетики','Оставлять ребёнка и уходить']},
+};
+function showStatHelp(k){
+  const s = STATS.find(x=>x.k===k), h = STAT_HELP[k], v = S ? S.st[k] : 50;
+  const li = (arr, col) => arr.map(t=>`<div style="margin:3px 0">• <span style="color:${col}">${t}</span></div>`).join('');
+  modal(`
+    <div class="e" style="font-size:54px">${s.ico}</div>
+    <h2>${s.lbl}: ${v} / 100</h2>
+    <p>${h.what}</p>
+    <div style="text-align:left;width:100%;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px;font-size:13.5px;line-height:1.4">
+      <div style="font-weight:800;margin-bottom:4px">⬆️ Поднимают</div>${li(h.up,'#7dffc0')}
+      <div style="font-weight:800;margin:10px 0 4px">⬇️ Опускают</div>${li(h.down,'#ff9db5')}
+    </div>
+    <div style="text-align:left;width:100%;font-size:12.5px;color:#ffd77a;line-height:1.45;margin-bottom:14px">
+      ⚠️ ${h.lo}<br>⚠️ ${h.hi}<br><span style="color:#d9b8dc">💡 Перед выбором потяни карточку в сторону — точками над шкалами видно, какие из них изменятся.</span>
+    </div>
+    <button class="ghost" id="m-close">Понятно</button>`);
+  document.getElementById('m-close').onclick = closeModal;
+}
+
+const WARN = {
+  mlo:'⚠️ Деньги на нуле — ещё чуть-чуть, и придут коллекторы',
+  mhi:'⚠️ Слишком много денег — откуда? Это подозрительно',
+  nhi:'⚠️ Нервы на пределе — ещё немного, и сорвёшься',
+  plo:'⚠️ Семья на грани — тебя вот-вот выгонят',
+  phi:'⚠️ Семья контролирует всё — скоро решат за тебя',
+  glo:'⚠️ Парень вот-вот исчезнет',
+  ghi:'⚠️ Ты растворяешься в нём — пора думать и о себе',
+  blo:'⚠️ Малышу плохо — опека уже рядом',
+  bhi:'⚠️ Гиперопека — ты забываешь про всё остальное',
+};
+
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+let heroIdx = load('hero', 0) % HEROES.length;
+function newHero(step){
+  heroIdx = (heroIdx + (step||0) + HEROES.length) % HEROES.length; save('hero', heroIdx);
+  hero = HEROES[heroIdx];
+  const av = document.getElementById('m-avatar');
+  av.innerHTML = hero.art ? `<img src="${artFile(hero.art, hero.art.avatar)}" alt="${hero.name}" class="avatar" onerror="this.parentNode.textContent='🤰'">` : '🤰';
+  const done = meta.ends.filter(e=>e.startsWith(hero.id+':')).length;
+  document.getElementById('girl').innerHTML =
+    `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+       <button class="pill" id="h-prev">◀</button>
+       <span style="font-size:12px;opacity:.7">${heroIdx+1} / ${HEROES.length}</span>
+       <button class="pill" id="h-next">▶</button></div>`+
+    `👧 <b>${hero.name}</b>, 16 лет, г. ${hero.city}<br>`+
+    `🏠 ${hero.bio}<br>`+
+    `${hero.guy.emo} Скоро встретит: <b>${hero.guy.name}</b> — ${hero.guy.type}<br>`+
+    `<span style="font-size:12px;opacity:.7">🏆 Пройдено концовок за неё: ${done}</span>`;
+  document.getElementById('h-prev').onclick = ()=>{ newHero(-1); haptic(); };
+  document.getElementById('h-next').onclick = ()=>{ newHero(1); haptic(); };
+}
+// склонение женских имён на -а/-я: р — родительный (кого?), д — дательный (кому?),
+// в — винительный (кого?), т — творительный (кем?). Алиса → Алисы/Алисе/Алису/Алисой
+function declFem(name, c){
+  if(!c || !/[ая]$/.test(name)) return name;
+  if(c==='д' && /ия$/.test(name)) return name.slice(0, -1) + 'и';   // София → Софии
+  const stem = name.slice(0, -1), ya = name.endsWith('я'), last = stem.slice(-1);
+  const hush = /[жшчщц]/.test(last), velar = /[гкхжшчщ]/.test(last);
+  if(c==='р') return stem + (ya || velar ? 'и' : 'ы');
+  if(c==='д') return stem + 'е';
+  if(c==='в') return stem + (ya ? 'ю' : 'у');
+  if(c==='т') return stem + (ya || hush ? 'ей' : 'ой');
+  return name;
+}
+function sub(s){
+  const male = hero.p1.g==='m';
+  const baby = (S && S.baby) || 'малышка';
+  return String(s)
+    .replace(/\[\[([^|\]]*)\|([^\]]*)\]\]/g, (_,m,f)=> male ? m : f)
+    .replace(/\{P1\}/g, hero.p1.name)
+    .replace(/\{P2\}/g, hero.p2.name)
+    .replace(/\{F(?::([рдвт]))?\}/g, (_,c)=> declFem(hero.f.name, c))
+    .replace(/\{g\}/g, hero.guy.name)
+    .replace(/\{n\}/g, hero.name)
+    .replace(/\{baby(?::([рдвт]))?\}/g, (_,c)=> declFem(baby, c));
+}
+function has(f){ return !!(S.flags[f]); }
+function ok(c){
+  if(c.hero && c.hero!==hero.id) return false;
+  if(c.if && !has(c.if)) return false;
+  if(c.ifnot && has(c.ifnot)) return false;
+  if(c.ifnot2 && has(c.ifnot2)) return false;
+  if(c.any  && !c.any.some(has))  return false;   // нужен хотя бы один из флагов
+  if(c.all  && !c.all.every(has)) return false;   // нужны все флаги
+  if(c.none && c.none.some(has))  return false;   // ни одного из флагов
+  if(c.pre && has('born')) return false;
+  if(c.post && !has('born')) return false;
+  if(c.minW && S.w < c.minW) return false;
+  return true;
+}
+
+/* ================= ДВИЖОК ================= */
+function startGame(){
+  const subOn = meta.subUntil > Date.now();   // подписка — безлимит энергии
+  if(!subOn && meta.energy<=0) return noEnergy();
+  if(!subOn) meta.energy--; save('meta',meta); renderMenu();
+  S = {i:0, w:0, chap:'', st:{m:50,n:45,p:55,g:50,b:50}, flags:{}, usedF:{}, fill:0, baby:'', card:null};
+  track('start');
+  hist = [];
+  go('game'); buildStats(); nextCard();
+  if(!load('statHint', false)){ save('statHint', true); setTimeout(()=>toast('💡 Нажми на любую шкалу — узнаешь, как её поднять', 4000), 1500); }
+}
+
+function nextBeatW(){
+  for(let j=S.i;j<STORY.length;j++){ if(ok(STORY[j]) && STORY[j].w) return STORY[j].w; }
+  return 999;
+}
+
+function nextCard(){
+  // бытовая сцена между главными
+  if(S.fill>0){
+    S.fill--;
+    const pool = FILL.filter(c=>!S.usedF[c.id] && ok(c));
+    if(pool.length){
+      const c = rnd(pool); S.usedF[c.id]=1;
+      if(S.w+1 < nextBeatW()) S.w++;
+      return show(c);
+    }
+  }
+  while(S.i < STORY.length && !ok(STORY[S.i])) S.i++;
+  if(S.i >= STORY.length) return finale();
+  const b = STORY[S.i++];
+  if(b.w) S.w = Math.max(S.w, b.w);
+  if(b.chap) S.chap = b.chap;
+  S.fill = (S.w >= 12 && !/bday$/.test(b.id) && Math.random() < FILL_CHANCE) ? 1 : 0;
+  show(b);
+}
+
+function show(c){ S.card = c; renderCard(); playMusic(sceneMusic()); }
+
+function choose(side){
+  const c = S.card;
+  if(c.nar){ stopVoice(); return nextCard(); }
+  const ch = c[side], both = c.both||{};
+  hist.push(JSON.parse(JSON.stringify(S))); if(hist.length>4) hist.shift();
+  stopVoice();
+  const love = !has('pregnant') && !(both.set||[]).includes('pregnant');
+  const fx = {};
+  for(const k in (ch.fx||{})){ const v = Math.round(ch.fx[k]*DIFF); if(v) fx[k]=v; }
+  // журнал решений — для объяснения концовки
+  S.log = S.log || [];
+  S.log.push({who:sub(c.who||''), t:sub(ch.t), fx, set:[...(ch.set||[]),...(both.set||[])], chap:S.chap});
+  if(S.log.length>80) S.log.shift();
+  for(const k in fx){
+    const lo = love?10:0, hi = love?90:100;
+    S.st[k] = Math.max(lo, Math.min(hi, S.st[k]+fx[k]));
+  }
+  // нервы понемногу возвращаются к середине (сами по себе не убивают)
+  if(!love){ const nv=S.st.n; S.st.n = nv>50 ? Math.max(50, nv-3) : Math.min(50, nv+2); }
+  [...(ch.set||[]),...(both.set||[])].forEach(f=>S.flags[f]=1);
+  (ch.unset||[]).forEach(f=>{ delete S.flags[f]; });
+  if(ch.baby) S.baby = ch.baby;
+  // начало беременности: шкалы подтягиваются к середине, чтобы не начинать главу 2 на грани
+  if((both.set||[]).includes('pregnant')){
+    for(const k in S.st) S.st[k] = Math.round(50 + (S.st[k]-50)*0.5);
+  }
+  haptic(side==='l'?'light':'medium');
+  showDeltas(fx); updateStats();
+  if(!love){
+    // предупреждение, когда шкала подходит к краю (один раз на каждый край)
+    S.warned = S.warned || {};
+    for(const s of STATS){
+      const v = S.st[s.k], dir = v>=80 ? 'hi' : v<=20 ? 'lo' : '';
+      if(dir && WARN[s.k+dir] && v>0 && v<100 && !S.warned[s.k+dir]){
+        S.warned[s.k+dir] = 1;
+        setTimeout(()=>toast(WARN[s.k+dir], 3500), 300);
+        break;
+      }
+    }
+    for(const s of STATS){
+      const v = S.st[s.k];
+      if((v<=0 && s.k!=='n') || v>=100){ setTimeout(()=>lose(s.k+(v<=0?'0':'100')), 450); return; }  // низкие нервы — не проигрыш
+    }
+  }
+  if(ch.res){
+    setTimeout(()=>show({nar:true, id:c.id+'_res', who:c.who, av:c.av, bg:c.bg, text:ch.res, mood:reactMood(fx, c.id)}), 260);
+  } else setTimeout(nextCard, 260);
+}
+
+/* ================= ЗВУК ================= */
+function speak(){ return Promise.resolve(); }
+function stopVoice(){}
+
+/* ================= МУЗЫКА =================
+   Положи mp3 в папку audio/ с такими именами (список и промпты — audio/README.md).
+   Нет файла — тишина, игра работает как обычно. */
+const MUSIC = {
+  menu:  'audio/menu.mp3',    // главное меню
+  love:  'audio/love.mp3',    // глава 1 — знакомство, лето, влюблённость
+  shock: 'audio/shock.mp3',   // глава 2 — две полоски, шок
+  drama: 'audio/drama.mp3',   // глава 3 — живот растёт, проблемы
+  birth: 'audio/birth.mp3',   // глава 4 — роды
+  life:  'audio/life.mp3',    // глава 5 — первый год
+  bad:   'audio/bad.mp3',     // проигрыш
+  good:  'audio/good.mp3',    // финал «год прожит»
+};
+const CHAP_MUSIC = ['love','shock','drama','birth','life']; // Глава 1..5
+const MUSIC_VOL = 0.45, FADE_MS = 1500;
+let musicOn = load('music', true), curTrack = '', curAudio = null;
+const missing = {};
+
+function fadeTo(a, vol, ms, done){
+  const from = a.volume, t0 = performance.now();
+  const step = now => {
+    const k = Math.min(1, (now - t0) / ms);
+    a.volume = Math.max(0, Math.min(1, from + (vol - from) * k));
+    if(k < 1) requestAnimationFrame(step); else if(done) done();
+  };
+  requestAnimationFrame(step);
+}
+function playMusic(key){
+  if(key === curTrack) return;
+  curTrack = key;
+  const old = curAudio; curAudio = null;
+  if(old) fadeTo(old, 0, FADE_MS, ()=>{ old.pause(); old.src=''; });
+  if(window.Synth) Synth.stop();
+  if(!musicOn || !key) return;
+  // нет mp3 — играет временная музыка из music.js
+  if(!MUSIC[key] || missing[key]){ if(window.Synth) Synth.play(key); return; }
+  const a = new Audio(MUSIC[key]);
+  a.loop = true; a.volume = 0;
+  a.addEventListener('error', ()=>{
+    missing[key] = 1;
+    if(curAudio === a){ curAudio = null; if(window.Synth && curTrack === key && musicOn) Synth.play(key); }
+  });
+  a.play().then(()=> fadeTo(a, MUSIC_VOL, FADE_MS)).catch(()=>{ /* браузер ждёт нажатия — запустим при первом клике */ });
+  curAudio = a;
+}
+function sceneMusic(){
+  if(!S) return 'menu';
+  if(S.card && S.card.music) return S.card.music;          // можно задать сцене music:'drama'
+  const n = parseInt((S.chap||'Глава 1').replace(/\D+/,''), 10) || 1;
+  return CHAP_MUSIC[n-1] || 'love';
+}
+function setMusic(on){
+  musicOn = on; save('music', on);
+  document.querySelectorAll('.music-btn').forEach(b=> b.textContent = on ? '🎵' : '🔇');
+  const k = curTrack || 'menu';
+  if(on){ curTrack = ''; playMusic(k); }
+  else { const old = curAudio; curAudio = null; if(old) fadeTo(old, 0, 400, ()=>old.pause()); if(window.Synth) Synth.stop(); }
+}
+// браузеры не дают играть звук до первого касания — подхватываем его
+document.addEventListener('pointerdown', ()=>{
+  if(window.Synth) Synth.resume();
+  if(musicOn && curAudio && curAudio.paused) curAudio.play().then(()=>fadeTo(curAudio, MUSIC_VOL, FADE_MS)).catch(()=>{});
+}, {capture:true});
+
+/* ================= КТО ЕСТЬ КТО ================= */
+// имя говорящего в диалоге («Свекровь» → настоящее имя его мамы)
+function spName(sp){
+  if(sp==='Свекровь' && hero.svek) return hero.svek.name;
+  if(sp==='{P2}' && hero.p2.tag) return hero.p2.name + ' (' + hero.p2.tag + ')';
+  return sub(sp);
+}
+// список персонажей текущей героини
+function castOf(h){
+  const list = [
+    {emo:h.emo, name:h.name, role:'это ты, героиня', desc:h.about, pic:artPic(h.art)},
+    {emo:h.guy.emo, name:h.guy.name, role:h.guy.role, desc:h.guy.desc, male:true, pic:artPic(h.guy.art)},
+    {emo:h.p1.emo, name:h.p1.name, role:h.p1.role, desc:h.p1.desc, male:h.p1.g==='m'},
+    {emo:h.p2.emo, name:h.p2.name, role:h.p2.role, desc:h.p2.desc, male:h.p2.g==='m'},
+    {emo:h.f.emo, name:h.f.name, role:h.f.role, desc:h.f.desc},
+  ];
+  if(h.svek) list.push({emo:h.svek.emo, name:h.svek.name, role:h.svek.role, desc:h.svek.desc});
+  (h.extra||[]).forEach(x=>list.push(x));
+  return list;
+}
+function showCast(){
+  const h = hero;
+  modal(`
+    <div class="e" style="font-size:54px">👥</div>
+    <h2>Кто есть кто</h2>
+    <p>История ${h.name === 'Настя' ? 'Насти' : h.name === 'Карина' ? 'Карины' : h.name === 'Алина' ? 'Алины' : 'Вики'} · г. ${h.city}</p>
+    <div style="width:100%;text-align:left;margin-bottom:12px">
+      ${castOf(h).map(c=>`
+        <div style="display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:16px;padding:11px 12px;margin-bottom:8px">
+          ${c.pic?`<img src="${c.pic}" alt="" style="width:46px;height:46px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">`:`<div style="font-size:30px;line-height:1;width:36px;text-align:center">${c.emo}</div>`}
+          <div style="flex:1;font-size:13px;line-height:1.4">
+            <b style="font-size:15px;color:${c.male?'#7fb2ff':'#ff9fca'}">${c.name}</b>
+            <span style="opacity:.65"> — ${c.role}</span><br>
+            <span style="color:#ecd3ee">${c.desc}</span>
+          </div>
+        </div>`).join('')}
+    </div>
+    <button class="ghost" id="m-close">Закрыть</button>`);
+  document.getElementById('m-close').onclick = closeModal;
+}
+// при первом появлении персонажа за партию — его карточка прямо в диалоге
+function meetCast(sp){
+  if(!S) return null;
+  S.met = S.met || {};
+  if(S.met[sp]) return null;
+  const map = {'{g}':hero.guy, '{P1}':hero.p1, '{P2}':hero.p2, '{F}':hero.f, 'Свекровь':hero.svek};
+  const c = map[sp] || (hero.extra||[]).find(x=>x.name===sp);
+  if(!c || !c.desc) return null;
+  S.met[sp] = 1;
+  return {...c, shown: spName(sp), male: isMale(sp)};
+}
+function introEl(c, label){
+  const el = document.createElement('div');
+  el.className = 'intro' + (c.male ? ' male' : '');
+  const pic = c.pic || artPic(c.art);
+  el.innerHTML = `${pic?`<img class="ie-img" src="${pic}" alt="">`:`<div class="ie">${c.emo}</div>`}
+    <div style="flex:1"><div class="il">${label||'Новый персонаж'}</div>
+    <div class="in">${c.shown||c.name} <span class="ir">· ${c.role}</span></div>
+    <div class="id">${c.desc}</div></div>`;
+  return el;
+}
+document.getElementById('btn-cast').onclick = ()=>{ haptic(); showCast(); };
+document.getElementById('g-cast').onclick = ()=>{ haptic(); showCast(); };
+
+/* ================= РЕНДЕР ================= */
+function buildStats(){
+  document.getElementById('stats').innerHTML = STATS.map(s=>
+    `<div class="stat" id="st-${s.k}"><div class="dot"></div><div class="delta"></div>
+      <div class="ico"><div class="fill"></div><span>${s.ico}</span></div><div class="lbl">${s.lbl}</div></div>`).join('');
+  STATS.forEach(s=> document.getElementById('st-'+s.k).onclick = ()=>{ haptic(); showStatHelp(s.k); });
+  updateStats();
+}
+function updateStats(){
+  STATS.forEach(s=>{
+    const el = document.getElementById('st-'+s.k), v = S.st[s.k];
+    el.querySelector('.fill').style.height = v+'%';
+    el.classList.toggle('danger', has('pregnant') && ((v<=15 && s.k!=='n') || v>=85));
+  });
+  document.getElementById('st-b').classList.toggle('locked', !has('pregnant'));
+  document.getElementById('g-chap').textContent = S.chap || 'Глава 1 · Знакомство';
+  document.getElementById('g-week').textContent = !has('pregnant') ? '💘' : has('born') ? `👶 ${Math.max(0,Math.round((S.w-40)/4.3))} мес` : `🤰 ${S.w} нед`;
+}
+function showDeltas(fx){
+  for(const k in fx){
+    const d = document.querySelector('#st-'+k+' .delta');
+    d.textContent = (fx[k]>0?'+':'')+fx[k];
+    d.style.color = fx[k]>0 ? '#7dffc0' : '#ff8a8a';
+    d.classList.remove('show'); void d.offsetWidth; d.classList.add('show');
+  }
+}
+function previewDots(side){
+  STATS.forEach(s=>{
+    const dot = document.querySelector('#st-'+s.k+' .dot');
+    const v = side && S.card[side] && S.card[side].fx ? S.card[side].fx[s.k] : 0;
+    dot.style.opacity = v ? 1 : 0;
+    dot.classList.toggle('big', Math.abs(v||0)>=20);
+  });
+}
+
+// аватар персонажа из его иллюстраций (или пусто)
+// путь к картинке: dir + имя + расширение (по умолчанию .png; можно задать ext или files)
+function artFile(a, name){ return a.dir + ((a.files && a.files[name]) || (name + (a.ext || '.png'))); }
+function artPic(a){ return a ? artFile(a, a.avatar||a.def) : ''; }
+// иллюстрация героини для сцены (если у героини есть арт)
+function heroArt(c){
+  const a = hero.art; if(!a) return '';
+  if(c.nar && c.mood) return artFile(a, c.mood);
+  const id = c.id.replace(/_res$/,'');
+  return artFile(a, a.scenes[id] || a.def);
+}
+// эмоция для «что было дальше» — по самому сильному изменению шкалы
+function reactMood(fx, cardId){
+  const a = hero.art; if(!a) return '';
+  let best = '', v = 0;
+  for(const k in fx){ if(Math.abs(fx[k]) > Math.abs(v)){ v = fx[k]; best = k; } }
+  return best ? (a.react[best + (v>0?'+':'-')] || '') : (a.scenes[cardId] || a.def);
+}
+function heroPic(mood, fallback){
+  const a = hero.art;
+  if(!a) return `<div class="e">${fallback}</div>`;
+  return `<img src="${artFile(a, mood)}" alt="" style="width:100%;max-height:210px;object-fit:cover;object-position:center 30%;border-radius:18px;margin-bottom:6px;box-shadow:0 10px 30px rgba(0,0,0,.4)" onerror="this.outerHTML='<div class=&quot;e&quot;>${fallback}</div>'">`;
+}
+
+function artHTML(c, sp){
+  // говорит парень, и у него есть иллюстрации — показываем его
+  const ga = hero.guy.art;
+  const guySpeaks = sp && ga && (sp==='{g}' || (ga.alias||[]).includes(sp));
+  const ha = guySpeaks ? artFile(ga, ga.scenes[c.id.replace(/_res$/,'')] || ga.def) : heroArt(c);
+  if(ha){
+    // у героини есть иллюстрации — показываем её эмоцию в этой сцене
+    return `
+      <img class="scene heroart${guySpeaks?' guyart':''}" src="${ha}" alt="" draggable="false" onerror="this.remove()">
+      ${c.tag?`<div class="tag">${c.tag}</div>`:''}
+      ${sp?`<div class="spk${isMale(sp)?' male':''}">${spName(sp)}</div>`:''}
+      <div class="choice l" id="ch-l"></div><div class="choice r" id="ch-r"></div>`;
+  }
+  const cs = sp!==undefined ? cast(sp) : null;
+  const emo = cs && sp ? cs.emo : c.av;
+  const key = cs && sp ? cs.key : '';
+  return `
+    <img class="scene" src="img/scene/${c.id.replace(/_res$/,'')}.jpg" alt="" draggable="false" onerror="this.remove()">
+    <div class="emo">${emo}</div>
+    ${key?`<img class="portrait" src="img/char/${key}.png" alt="" draggable="false" onload="this.previousElementSibling.style.display='none'" onerror="this.remove()">`:''}
+    ${c.tag?`<div class="tag">${c.tag}</div>`:''}
+    ${sp?`<div class="spk${isMale(sp)?' male':''}">${spName(sp)}</div>`:''}
+    <div class="choice l" id="ch-l"></div><div class="choice r" id="ch-r"></div>`;
+}
+
+let runId = 0;
+function renderCard(){
+  const c = S.card, my = ++runId;
+  stopVoice();
+  document.getElementById('who').innerHTML = `📍 <b>${sub(c.who||'')}</b>`;
+  const bl = document.getElementById('btn-l'), br = document.getElementById('btn-r');
+  const deck = document.getElementById('deck');
+  deck.innerHTML = `<div class="card back"></div>
+    <div class="card ${c.nar?'narcard':''}" id="card">
+      <div class="art" id="art" style="background:${c.bg}"></div>
+      <div class="body" id="body"></div>
+    </div>`;
+  const card = document.getElementById('card'), art = document.getElementById('art'), body = document.getElementById('body');
+  card.animate([{transform:'scale(.92)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:220,easing:'ease-out'});
+  previewDots(null);
+
+  if(c.nar){
+    art.innerHTML = artHTML(c);
+    body.innerHTML = `<div class="then">ЧТО БЫЛО ДАЛЬШЕ</div><div>${sub(c.text)}</div>`;
+    bl.classList.add('hide'); br.textContent = 'Дальше →'; br.disabled = false;
+    speak('', sub(c.text));
+    bindSwipe(card, true);
+    return;
+  }
+
+  bl.classList.remove('hide');
+  bl.textContent = '← '+sub(c.l.t); br.textContent = sub(c.r.t)+' →';
+  bl.disabled = br.disabled = true;
+  card.querySelector('#ch-l') ; // labels filled after art render
+  let ready = false;
+  const finish = () => {
+    if(ready) return; ready = true;
+    body.querySelectorAll('.tapmore').forEach(e=>e.remove());
+    bl.disabled = br.disabled = false;
+    bindSwipe(card, false);
+  };
+  // реплика может зависеть от прошлых выборов: ['Кто','текст','флаг'] или ['Кто','текст','!флаг']
+  const lines = (c.lines || []).filter(l => !l[2] || l[2].split('&').every(q => q[0]==='!' ? !has(q.slice(1)) : has(q)));
+  const addLine = (ln) => {
+    const [sp, txt] = ln, t = sub(txt);
+    const el = document.createElement('div');
+    let extra = 0;
+    if(!sp){ el.className='nar'; el.textContent=t; }
+    else {
+      const me = sp==='Ты', thought = me && /^\(/.test(txt);
+      el.className = 'msg ' + (thought?'thought':me?'me':'them') + (isMale(sp)?' male':'');
+      el.innerHTML = `<span class="sp">${spName(sp)}</span>`;
+      el.appendChild(document.createTextNode(t));
+      // первое появление — сначала представляем персонажа
+      const who = meetCast(sp);
+      if(who){ body.appendChild(introEl(who)); extra = 2600 + who.desc.length*25; }
+    }
+    body.appendChild(el);
+    // портрет говорящего
+    art.innerHTML = artHTML(c, sp || undefined);
+    art.classList.remove('talk'); void art.offsetWidth; art.classList.add('talk');
+    fillChoiceLabels(card, c);
+    body.scrollTop = body.scrollHeight;
+    return extra;
+  };
+  art.innerHTML = artHTML(c); fillChoiceLabels(card, c);
+  // проигрывание реплик по очереди; тап по карточке — показать всё сразу
+  let idx = 0, skip = false, wake = null;
+  // кнопка «показать всё» — видна, пока диалог проигрывается
+  let skipBtn = null;
+  if(lines.length > 1){
+    skipBtn = document.createElement('button');
+    skipBtn.className = 'skipall'; skipBtn.textContent = '⏩ Показать всё';
+    card.appendChild(skipBtn);
+  }
+  const skipAll = (e)=>{
+    if(ready) return;
+    if(e) e.stopPropagation();
+    skip = true; stopVoice();
+    if(wake) wake();               // прерываем текущую паузу сразу
+  };
+  if(skipBtn){ skipBtn.addEventListener('pointerdown', e=>e.stopPropagation()); skipBtn.addEventListener('click', skipAll); }
+  card.addEventListener('click', ()=> skipAll());
+  const origFinish = finish;
+  const pause = ms => new Promise(r=>{ wake = r; setTimeout(r, ms); }).then(()=>{ wake = null; });
+  (async ()=>{
+    // в самом начале истории — представляем героиню
+    S.met = S.met || {};
+    if(!S.met.__hero){
+      S.met.__hero = 1;
+      body.appendChild(introEl({emo:hero.emo, pic:artPic(hero.art), shown:hero.name, role:'16 лет, это ты', desc:hero.about}, 'Твоя героиня'));
+      if(!skip) await pause(3500 + hero.about.length*25);
+    }
+    while(idx < lines.length){
+      if(my!==runId) return;
+      const extra = addLine(lines[idx]);
+      const [sp, txt] = lines[idx]; idx++;
+      if(skip || idx >= lines.length) continue;
+      await pause(Math.min(4200, 1250 + sub(txt).length*47) + extra);
+    }
+    if(my===runId){ if(skipBtn) skipBtn.remove(); origFinish(); }
+  })();
+}
+function fillChoiceLabels(card, c){
+  const l = card.querySelector('#ch-l'), r = card.querySelector('#ch-r');
+  if(l && c.l) l.textContent = sub(c.l.t);
+  if(r && c.r) r.textContent = sub(c.r.t);
+}
+
+function bindSwipe(card, nar){
+  let x0=null, dx=0;
+  const set = () => {
+    card.style.transform = `translateX(${dx}px) rotate(${dx/18}deg)`;
+    const chL = card.querySelector('#ch-l'), chR = card.querySelector('#ch-r');
+    if(!nar){
+      if(chL) chL.style.opacity = dx<-25 ? Math.min(1,(-dx-25)/60) : 0;
+      if(chR) chR.style.opacity = dx>25 ? Math.min(1,(dx-25)/60) : 0;
+      previewDots(dx<-25?'l':dx>25?'r':null);
+    }
+  };
+  card.addEventListener('pointerdown', e=>{ x0=e.clientX; dx=0; card.setPointerCapture(e.pointerId); card.style.transition='none'; });
+  card.addEventListener('pointermove', e=>{ if(x0===null) return; dx=e.clientX-x0; set(); });
+  const up = () => {
+    if(x0===null) return; x0=null;
+    if(Math.abs(dx)>90){ fly(card, nar ? 'r' : (dx<0?'l':'r'), dx<0); }
+    else { card.style.transition='transform .25s'; dx=0; set(); }
+  };
+  card.addEventListener('pointerup', up); card.addEventListener('pointercancel', up);
+}
+let flying = false;
+function fly(card, side, toLeft){
+  if(flying) return; flying = true;
+  const left = toLeft!==undefined ? toLeft : side==='l';
+  card.style.transition='transform .3s ease-in, opacity .3s';
+  card.style.transform = `translateX(${left?-500:500}px) rotate(${left?-30:30}deg)`;
+  card.style.opacity = 0;
+  setTimeout(()=>flying=false, 300);
+  choose(side);
+}
+document.getElementById('btn-l').onclick = ()=>{ const c=document.getElementById('card'); if(c && !S.card.nar) fly(c,'l'); };
+document.getElementById('btn-r').onclick = ()=>{ const c=document.getElementById('card'); if(c) fly(c,'r'); };
+
+/* ================= КОНЦОВКИ / МОНЕТИЗАЦИЯ ================= */
+function unlock(id){ const k=hero.id+':'+id; const isNew=!meta.ends.includes(k); if(isNew) meta.ends.push(k); if(!meta.ends.includes(id)) meta.ends.push(id); save('meta',meta); return isNew; }
+
+/* ---------- объяснение концовок ---------- */
+const STAT_NAME = {m:'Деньги', n:'Нервы', p:'Семья', g:'Парень', b:'Малыш'};
+const LOSE_WHY = {
+  m0:  'Деньги кончились совсем. Траты и займы съели всё, а заработка не было.',
+  m100:'Денег стало слишком много — и почти все из мутных источников.',
+  n0:  'Ты перестала переживать вообще. Это не спокойствие — это безразличие.',
+  n100:'Нервы не выдержали: слишком много скандалов, вранья и бессонных ночей подряд.',
+  p0:  'Ты раз за разом шла против семьи — и они от тебя отвернулись.',
+  p100:'Ты во всём уступала семье — и они решили всё за тебя, даже про ребёнка.',
+  g0:  'Ты слишком часто его отталкивала — и он просто исчез.',
+  g100:'Ты жила только им: всегда соглашалась, всё прощала, всё ради него. Себя не осталось.',
+  b0:  'Малышу было плохо слишком долго — экономия на нём и риски не прошли даром.',
+  b100:'Ты думала только о ребёнке и забыла про всё остальное — деньги, себя, семью.',
+};
+const LOSE_TIP = {
+  m0:'Иногда стоит выбрать подработку или попросить помощи дома.',
+  m100:'Не все деньги стоит брать.',
+  n0:'Иногда стоит поругаться — это тоже нормально.',
+  n100:'Выбирай варианты, где тебе помогают и где можно выдохнуть.',
+  p0:'Иногда стоит промолчать или послушать семью.',
+  p100:'Иногда стоит настоять на своём.',
+  g0:'Не каждый спор стоит скандала.',
+  g100:'Иногда стоит сказать ему «нет» и выбрать себя или семью.',
+  b0:'На ребёнке экономить нельзя: витамины, врачи, прививки.',
+  b100:'Дай помочь другим и подумай о себе тоже.',
+};
+const FIN_WHY = {
+  f_prison:  {flags:['waiting','married_prison'], text:'Ты не отпустила его, даже когда он сел: писала, слала деньги, ждала.'},
+  f_alliance:{flags:['alliance','met_k'],         text:'Ты не стала воевать с Кристиной — вы объединились против него.'},
+  f_rival:   {flags:['rival','knows'],            text:'Ты узнала про вторую семью, но решила бороться за него.'},
+  f_tv:      {flags:['tv','clip'],                text:'Ты пустила камеры в свою жизнь — и теперь вся страна знает тебя в лицо.'},
+  f_blog:    {flags:['blogger','clip','brand'],   text:'Ты превратила хейт в контент и сделала свою жизнь блогом.'},
+  p100:      {flags:['mom_custody'],              text:'Мама предложила оформить опеку на себя — и ты не сказала «нет».'},
+  f_distance:{flags:['g_moscow'],                 text:'Ты отпустила его учиться в Москву, а сама осталась с дочкой.'},
+  f_svek:    {flags:['at_svek','obey'],           text:'Ты переехала к его маме и стала жить по её правилам.'},
+  // финалы Насти
+  n_relapse: {flags:['den_home','den_probation','den_choice_free'], text:'Дэн вышел, но когда за ним пришёл Шрам, ты отошла в сторону. Одному ему было не устоять.'},
+  n_clean:   {flags:['took_blame','den_home','den_probation','den_defended'], text:'Ты взяла на себя часть его вины, а когда он вышел — не отпустила его обратно к пацанам.'},
+  n_shino:   {flags:['den_quit_try','den_legit','den_clean','own_flat'], text:'Ты поставила ультиматум и поддержала его честную работу — и он выбрал вас, а не пацанов.'},
+  n_kostya:  {flags:['den_out','prison','kostya','kostya_yes'], text:'Ты не стала ждать Дэна и подпустила к себе человека, который просто был рядом.'},
+  n_weekend: {flags:['den_out','den_visits'], text:'Ты отпустила Дэна, но не закрыла ему дверь к дочери.'},
+  n_grandpa: {flags:['den_out','prison','igor_peace'], text:'Ты помирилась с Игорем — и он стал для дочки тем, кем не стал Дэн.'},
+  n_young:   {flags:['wedding','marriage_work','den_stay'], text:'Ты сказала «да» — и потом не раз выбирала мир вместо скандала.'},
+  n_divorce: {flags:['wedding','wed_scandal','wed_cracks','den_vahta','wed_big'], text:'Вы поженились, но после скандала с чужими духами так и не помирились: брак не выдержал ни ссор, ни вахты ради свадебного кредита.'},
+  n_vahta:   {flags:['wedding','den_vahta'], text:'Ты поверила ему и отпустила на вахту — ради денег и своего жилья.'},
+  n_return:  {flags:['run','run_back'], text:'Ты сбежала с Дэном в Питер, но в итоге выбрала дом и маму.'},
+  n_spb:     {flags:['run','mom_contact','run_stay'], text:'Ты осталась в Питере, но не сожгла мосты: помирилась с мамой и строишь свою жизнь сама.'},
+  n_lost:    {flags:['run','no_note'], text:'Ты сбежала и так и не перезвонила маме. Вы совсем одни в чужом городе.'},
+};
+// концовки Карины, Алины и Вики лежат в их файлах (story_*.js → ends) — добавляем перед премиум-ветками
+(function(){
+  const prem = {}; for(const k in ENDS) if(ENDS[k].prem){ prem[k] = ENDS[k]; delete ENDS[k]; }
+  HEROES.forEach(h => Object.entries(h.ends || {}).forEach(([id, e]) => {
+    ENDS[id] = {e:e.e, t:e.t, d:e.d};
+    if(e.why) FIN_WHY[id] = e.why;
+  }));
+  Object.assign(ENDS, prem);
+})();
+function fmtFx(fx, only){
+  return Object.keys(fx).filter(k=>!only||k===only).map(k=>`${fx[k]>0?'+':''}${fx[k]} ${STAT_NAME[k]}`).join(', ');
+}
+function whyHTML(title, items, tip){
+  return `<div style="text-align:left;width:100%;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:14px;font-size:13.5px;line-height:1.45">
+    <div style="font-weight:800;margin-bottom:6px">🔍 Почему так вышло</div>
+    <div style="color:#ecd3ee;margin-bottom:${items.length?8:0}px">${title}</div>
+    ${items.length?`<div style="font-size:12px;color:#d9b8dc;margin-bottom:4px">Решения, которые к этому привели:</div>`+
+      items.map(x=>`<div style="margin:3px 0">• <b>${x.t}</b> <span style="opacity:.6">(${x.who})</span><br><span style="font-size:12px;color:${x.col||'#ff9db5'}">${x.d}</span></div>`).join(''):''}
+    ${tip?`<div style="margin-top:8px;font-size:12px;color:#ffd77a">💡 ${tip}</div>`:''}
+  </div>`;
+}
+function statsLine(){
+  return STATS.map(s=>`${s.ico} ${S.st[s.k]}`).join(' · ');
+}
+
+function lose(endId){
+  const e = ENDS[endId]; const isNew = unlock(endId); haptic('heavy'); stopVoice(); playMusic('bad');
+  track('death', {result:endId});
+  const k = endId[0], dir = endId.endsWith('100') ? 1 : -1;
+  const culprits = (S.log||[]).filter(x=>x.fx[k] && x.fx[k]*dir>0).slice(-4).reverse()
+    .map(x=>({t:x.t, who:x.who, d:fmtFx(x.fx, k)}));
+  const title = `Шкала «${STAT_NAME[k]}» дошла до ${dir>0?'100':'0'}. ${LOSE_WHY[endId]}`;
+  modal(`
+    ${heroPic(hero.art?hero.art.lose:'', e.e)}
+    <h2>${e.t}</h2>
+    <p>${e.d}</p>
+    ${whyHTML(title, culprits, LOSE_TIP[endId])}${(rememberEnd(endId, title, culprits, LOSE_TIP[endId], S.chap.split("·")[1]||S.chap),"")}
+    <div class="meta">${hero.name} дошла до: ${S.chap.split('·')[1]||S.chap} ${isNew?'· <b style="color:#ffc83d">новая концовка!</b>':''}</div>
+    <button class="cta gold" id="m-chance">🔁 Второй шанс · ${meta.chances>0 ? `осталось ${meta.chances}` : "⭐ 15"}</button>
+    <button class="ghost" id="m-ad">📺 Посмотреть рекламу и вернуться</button>
+    <button class="ghost" id="m-share">📤 Поделиться концовкой</button>
+    <button class="ghost" id="m-menu">В меню</button>`);
+  document.getElementById('m-chance').onclick = ()=>{ if(meta.chances>0){ meta.chances--; save('meta',meta); rewind(); } else pay('chance1', rewind); };
+  document.getElementById('m-ad').onclick = ()=> watchAd(rewind);
+  document.getElementById('m-share').onclick = ()=> share(e);
+  document.getElementById('m-menu').onclick = ()=>{ closeModal(); go('menu'); };
+}
+
+function rewind(){
+  const back = hist.length>=3 ? hist[hist.length-3] : hist[0];
+  S = JSON.parse(JSON.stringify(back)); hist = [];
+  closeModal(); go('game'); buildStats(); renderCard(); playMusic(sceneMusic());
+  toast('⏪ Откат на 3 хода назад');
+}
+
+function finale(){
+  const f = S.flags, st = S.st;
+  // у героини может быть своя логика финала (story.js → finale)
+  const own = hero.finale ? hero.finale(f, st) : '';
+  const id = own ? own
+        : (f.married_prison || f.waiting) ? 'f_prison'
+        : f.alliance ? 'f_alliance'
+        : f.rival && !f.kicked ? 'f_rival'
+        : f.tv ? 'f_tv'
+        : f.blogger ? 'f_blog'
+        : f.mom_custody ? 'p100'
+        : f.g_moscow ? 'f_distance'
+        : (f.at_svek || f.obey) && !f.fled ? 'f_svek'
+        : (st.g >= 55 && !f.prison && !f.kicked) ? 'f_family' : 'f_solo';
+  const e = ENDS[id]; const isNew = unlock(id); haptic('heavy'); playMusic('good');
+  track('end', {result:id});
+  // ключевые решения, которые определили концовку
+  let title, items;
+  const fw = FIN_WHY[id];
+  if(fw){
+    items = (S.log||[]).filter(x=>x.set.some(f=>fw.flags.includes(f)))
+      .map(x=>({t:x.t, who:x.who, d:(x.chap.split('·')[1]||'').trim(), col:'#9fd3ff'}));
+    title = fw.text;
+  } else if(id==='f_family'){
+    title = `Парень остался рядом: в конце шкала «Парень» — ${st.g}. Вы прошли этот год вместе.`;
+    items = (S.log||[]).filter(x=>(x.fx.g||0)>=8).slice(-3).reverse().map(x=>({t:x.t, who:x.who, d:fmtFx(x.fx,'g'), col:'#9fd3ff'}));
+  } else {
+    title = f.kicked ? 'Ты сама выгнала его — и справилась без него.'
+          : f.prison ? 'Он в колонии, а ты не стала ждать.'
+          : `Шкала «Парень» в конце — ${st.g}. Он так и не стал опорой, и ты справилась сама.`;
+    items = (S.log||[]).filter(x=>x.set.includes('kicked')||x.set.includes('college')||(x.fx.g||0)<=-10).slice(-3).reverse()
+      .map(x=>({t:x.t, who:x.who, d:fmtFx(x.fx)||'', col:'#9fd3ff'}));
+  }
+  modal(`
+    ${heroPic(hero.art?hero.art.win:'', e.e)}
+    <h2>Год прожит! ${e.t}</h2>
+    <p>${e.d}</p>
+    ${whyHTML(title, items, '')}${(rememberEnd(id, title, items, '', "Год прожит"),"")}
+    <div class="meta">Итог: ${statsLine()}</div>
+    <div class="meta">${sub('{baby:д}').replace(/^./, ch=>ch.toUpperCase())} год · ${isNew?'<b style="color:#ffc83d">новая концовка!</b>':'концовка уже была'}</div>
+    <button class="cta" id="m-share">📤 Поделиться</button>
+    <button class="ghost" id="m-menu">В меню</button>`);
+  document.getElementById('m-share').onclick = ()=> share(e);
+  document.getElementById('m-menu').onclick = ()=>{ closeModal(); go('menu'); };
+}
+
+function noEnergy(){
+  modal(`
+    <div class="e">🔋</div>
+    <h2>Энергия кончилась</h2>
+    <p>Новая жизнь через 2:59:12. Или прямо сейчас:</p>
+    <button class="cta gold" id="m-buy">⚡ ×10 за ⭐ 49</button>
+    <button class="ghost" id="m-ad">📺 Реклама = +1 ⚡</button>
+    <button class="ghost" id="m-sub">👑 Подписка — безлимит</button>
+    <button class="ghost" id="m-close">Подожду</button>`);
+  document.getElementById('m-buy').onclick = ()=> pay('energy10', ()=>{ closeModal(); renderMenu(); toast('+10 ⚡'); });
+  document.getElementById('m-ad').onclick = ()=> watchAd(()=>{ meta.energy+=1; save('meta',meta); closeModal(); renderMenu(); toast('+1 ⚡'); });
+  document.getElementById('m-sub').onclick = ()=>{ closeModal(); go('shop'); };
+  document.getElementById('m-close').onclick = closeModal;
+}
+
+function pay(itemId, onOk){
+  const item = [...SHOP, {id:'chance1', t:'Второй шанс', p:15}].find(s => s.id === itemId); if(!item) return;
+  const title = item.t, price = item.p;
+  const done = () => { if(itemId !== 'chance1') grant(itemId); haptic('medium'); onOk ? onOk() : (closeModal(), toast('✅ ' + title)); };
+  // Настоящая оплата: сервер создаёт счёт в Telegram Stars → окно оплаты Telegram
+  if(online && window.M16_PAY && tg && tg.openInvoice){
+    toast('⏳ Открываем оплату…');
+    api('/invoice', {item:itemId}).then(r => {
+      if(!r || !r.link){ toast('Не получилось открыть оплату. Попробуй ещё раз'); return; }
+      tg.openInvoice(r.link, status => {
+        if(status === 'paid'){ done(); api('/claim', {payload:r.payload}).then(c => grantAll(c && c.items)); }
+        else if(status === 'failed') toast('❌ Оплата не прошла');
+      });
+    });
+    return;
+  }
+  // Демо без сервера (локальный прототип)
+  modal(`
+    <div class="e">⭐</div>
+    <h2>${title}</h2>
+    <p>Здесь откроется окно оплаты Telegram Stars.<br>Цена: <b>${price} ⭐</b></p>
+    <button class="cta gold" id="m-ok">Оплатить (демо)</button>
+    <button class="ghost" id="m-close">Отмена</button>`);
+  document.getElementById('m-ok').onclick = ()=>{ toast('✅ Оплачено (демо)'); done(); };
+  document.getElementById('m-close').onclick = closeModal;
+}
+
+function watchAd(onOk){
+  // В проде: AdsGram / Monetag rewarded video
+  let t = 5;
+  modal(`<div class="adbox" id="adbox">Реклама · ${t}</div><p>Rewarded-видео (AdsGram / Monetag)</p>`);
+  const iv = setInterval(()=>{
+    t--; const b=document.getElementById('adbox'); if(b) b.textContent='Реклама · '+t;
+    if(t<=0){ clearInterval(iv); onOk(); }
+  },1000);
+}
+
+function share(e){
+  const text = `Моя концовка в «Мамке в 16»: ${e.e} ${e.t}. А ты сколько продержишься?`;
+  try{ if(tg && tg.switchInlineQuery){ tg.switchInlineQuery(text, ['users','groups']); return; } }catch(err){}
+  try{ navigator.clipboard.writeText(text); }catch(err){}
+  toast('📋 Текст скопирован');
+}
+
+/* ================= ЭКРАНЫ ================= */
+function go(name){
+  if(name!=='game'){ stopVoice(); playMusic('menu'); }
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id==='s-'+name));
+  if(name==='menu'){ newHero(0); renderMenu(); }
+  if(name==='ends') renderEnds();
+  if(name==='shop') renderShop();
+}
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+
+function renderMenu(){
+  document.getElementById('m-energy').textContent = `⚡ ${meta.energy}/3`;
+  document.getElementById('m-stars').textContent = meta.stars;
+  document.getElementById('m-ends').textContent = meta.ends.filter(e=>!e.includes(':')).length;
+  document.getElementById('m-ends-total').textContent = Object.keys(ENDS).length;
+}
+// группы на экране «Концовки»: у каждой героини свои финалы, отдельно — общие и досрочные
+function endGroups(){
+  const own = {nastya: ['f_prison', ...Object.keys(ENDS).filter(id => id.startsWith('n_'))]};
+  HEROES.forEach(h => { if(h.ends) own[h.id] = Object.keys(h.ends); });
+  const taken = new Set(Object.values(own).flat());
+  const groups = HEROES.map(h => ({title:`${h.emo} ${h.name} и ${h.guy.name}`, ids:own[h.id] || []}));
+  groups.push({title:'🏠 Общие финалы', ids:['f_family','f_solo']});
+  groups.push({title:'💀 Досрочные концовки', ids:Object.keys(ENDS).filter(id => !id.includes('_') && !taken.has(id))});
+  groups.push({title:'⭐ Премиум', ids:Object.keys(ENDS).filter(id => ENDS[id].prem)});
+  return groups.map(g => ({...g, ids:g.ids.filter(id => ENDS[id])})).filter(g => g.ids.length);
+}
+function renderEnds(){
+  const cell = id => {
+    const e = ENDS[id], got = meta.ends.includes(id);
+    return `<div class="end ${got?'':'locked'}" ${got?`data-end="${id}" style="cursor:pointer"`:''}><div class="e">${got?e.e:(e.prem?'🔒':'❓')}</div>${got?e.t:(e.prem?'Премиум':'???')}</div>`;
+  };
+  document.getElementById('ends-grid').innerHTML = endGroups().map(g => {
+    const n = g.ids.filter(id => meta.ends.includes(id)).length;
+    return `<div class="ends-group"><h3>${g.title}<span class="cnt">${n} / ${g.ids.length}</span></h3><div class="grid">${g.ids.map(cell).join('')}</div></div>`;
+  }).join('');
+  document.querySelectorAll('[data-end]').forEach(el=> el.onclick = ()=>{ haptic(); showEndInfo(el.dataset.end); });
+}
+
+// запоминаем, как была получена концовка — чтобы показать в разделе «Концовки»
+function rememberEnd(id, title, items, tip, stage){
+  meta.endInfo = meta.endInfo || {};
+  const who = meta.endInfo[id] && meta.endInfo[id].heroes || [];
+  if(!who.includes(hero.name)) who.push(hero.name);
+  meta.endInfo[id] = {hero:hero.name, guy:hero.guy.name, title, items, tip, stage,
+                      stats:statsLine(), heroes:who, date:new Date().toLocaleDateString('ru-RU')};
+  save('meta', meta);
+}
+function showEndInfo(id){
+  const e = ENDS[id], info = (meta.endInfo||{})[id];
+  const body = info
+    ? `<div class="meta" style="margin-bottom:10px">Последний раз: <b>${info.hero}</b> (парень — ${info.guy}) · ${info.stage} · ${info.date}</div>
+       ${whyHTML(info.title, info.items||[], info.tip)}
+       <div class="meta">Шкалы в тот момент: ${info.stats}</div>
+       <div class="meta">Получали: ${info.heroes.join(', ')}</div>`
+    : `<div class="meta" style="margin-bottom:14px">Подробности появятся, когда получишь эту концовку ещё раз.</div>`;
+  modal(`
+    <div class="e">${e.e}</div>
+    <h2>${e.t}</h2>
+    <p>${e.d}</p>
+    ${body}
+    <button class="ghost" id="m-close">Закрыть</button>`);
+  document.getElementById('m-close').onclick = closeModal;
+}
+function renderShop(){
+  const list = document.getElementById('shop-list');
+  list.innerHTML = SHOP.map((s,i)=>`
+    <div class="shopitem"><div class="e">${s.e}</div>
+      <div class="t"><b>${s.t}${s.badge?`<span class="badge">${s.badge}</span>`:''}</b><i>${s.d}</i></div>
+      <button class="price" data-i="${i}">⭐ ${s.p}${s.per||''}</button></div>`).join('')
+    + `<div class="shopitem"><div class="e">👥</div><div class="t"><b>Позови подругу</b><i>Вам обеим по +3 ⚡</i></div><button class="price" id="ref">Позвать</button></div>`;
+  list.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=> pay(SHOP[b.dataset.i].id));
+  document.getElementById('ref').onclick = invite;
+}
+
+function modal(html){ document.getElementById('sheet').innerHTML = html; document.getElementById('modal').classList.add('on'); }
+function closeModal(){ document.getElementById('modal').classList.remove('on'); }
+let tt; function toast(t, ms){ const el=document.getElementById('toast'); el.textContent=t; el.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('on'),ms||1600); }
+
+document.getElementById('btn-start').onclick = startGame;
+document.getElementById('btn-reroll').onclick = ()=>{ newHero(1+Math.floor(Math.random()*(HEROES.length-1))); haptic(); };
+document.getElementById('btn-exit').onclick = ()=> go('menu');
+
+newHero(); renderMenu();
+document.querySelectorAll('.music-btn').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); setMusic(!musicOn); toast(musicOn ? '🎵 Музыка включена' : '🔇 Музыка выключена'); });
+setMusic(musicOn);
+</script>
+</body>
+</html>
