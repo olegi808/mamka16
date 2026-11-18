@@ -55,40 +55,37 @@ const HEROES = [
                    nastya_wed_jealous:'scared', nastya_wed_vahta:'serious', nastya_spb_choice:'serious', night:'serious', nastya_den_playground:'sorry', nastya_birth_spb:'shocked', nastya_birth_spb2:'stressed' } },
         role:'парень, 17', desc:'Пацан с Заречного. Школу почти бросил, «подрабатывает с пацанами». Обаятельный, ревнивый, может быть очень нежным. Его отец сидит в тюрьме.'},
     svek:{name:'Тётя Люба', emo:'👵', role:'мама Дэна', desc:'Торгует на рынке и тянет сына одна. Добрая, но давно смирилась: «он в отца пошёл».'},
-    // Иллюстрации героини: img/hero/nastya/<эмоция>.png
-    // эмоции: calm happy worried crying shocked test lost thoughtful relief determined
-    art:{ dir:'img/hero/nastya/', def:'calm', avatar:'calm', lose:'crying', win:'relief', who:'Настя',
+    // Иллюстрации героини: img/hero/nastya/<эмоция>.jpg
+    // эмоции: calm love happy worried crying shocked test lost thoughtful relief determined
+    //         angry tired pregnant labor with_baby wedding
+    art:{ dir:'img/hero/nastya/', ext:'.jpg', def:'calm', avatar:'calm', lose:'crying', win:'relief', who:'Настя',
       scenes:{
         // глава 1
-        nastya_meet:'calm', nastya_chat:'happy', nastya_date:'happy', nastya_catch:'worried',
-        nastya_igor:'determined', nastya_lake:'thoughtful', nastya_jealous:'worried', nastya_ring:'relief',
-        sick:'worried',
+        nastya_meet:'calm', nastya_school_wait:'happy', nastya_chat:'love', nastya_date:'love', nastya_catch:'worried',
+        nastya_cafe_broke:'thoughtful', nastya_igor:'determined', nastya_lake:'thoughtful', nastya_lake_fight:'shocked',
+        nastya_lake_stories:'crying', nastya_jealous:'worried', nastya_control:'worried', nastya_ring:'love', sick:'worried',
         // глава 2
-        test:'shocked', mom_finds:'test', nastya_tell:'lost', nastya_council:'lost',
-        nastya_svek:'thoughtful', where:'thoughtful',
+        test:'test', mom_finds:'shocked', nastya_tell:'lost', nastya_den_gone:'crying', nastya_council:'lost',
+        nastya_svek:'thoughtful', nastya_svek_alone:'relief', nastya_proposal:'shocked', nastya_wed_parents:'determined',
+        where:'thoughtful', nastya_run_offer:'lost', nastya_run_night:'thoughtful',
         // глава 3
-        school:'determined', uzi:'relief', money:'worried', h_money:'shocked', h_police:'shocked',
-        h_court:'crying', collect:'lost', bag:'calm',
-        // глава 4–5
-        birth:'shocked', born:'relief', nastya_birth_alone:'shocked', nastya_birth_spb:'shocked', nastya_birth_spb2:'shocked', nastya_born_alone:'relief', discharge_p:'thoughtful', discharge:'thoughtful', night:'lost',
-        allowance:'worried', h_letter:'thoughtful', party:'thoughtful', h_visit:'worried',
-        nastya_igor2:'relief', college:'determined', bday:'happy',
-        // бытовые
-        nastya_d_sleep:'determined', nastya_d_lecture2:'lost', nastya_d_igor:'determined', nastya_d_gaming:'worried', nastya_d_nightout:'crying',
-        nastya_d_gossip:'thoughtful', nastya_d_vape:'thoughtful', nastya_d_energy:'calm', nastya_d_doctor:'worried',
-        nastya_d_nails:'happy', nastya_d_flowers:'relief', nastya_d_svek:'calm', nastya_d_neighbor:'lost',
-        nastya_d_formula:'worried', nastya_d_vahta:'thoughtful', nastya_d_vacc:'worried',
-        // новые ветки
-        nastya_school_wait:'happy', nastya_cafe_broke:'thoughtful', nastya_lake_fight:'shocked',
-        nastya_lake_stories:'crying', nastya_control:'worried', nastya_den_gone:'crying',
-        nastya_svek_alone:'relief', nastya_luba_help:'relief', nastya_ultimatum:'determined',
-        nastya_den_job:'happy', nastya_shram:'worried', nastya_new_guy:'happy',
-        nastya_discharge_alone:'thoughtful', nastya_discharge_quiet:'calm', nastya_luba_letter:'thoughtful', nastya_den_playground:'thoughtful', nastya_legit_life:'happy', nastya_release:'shocked',
-        nastya_relapse_test:'worried', nastya_igor_leave:'crying', nastya_kostya2:'thoughtful',
-        nastya_proposal:'shocked', nastya_wed_parents:'determined', nastya_run_offer:'lost', nastya_run_night:'thoughtful',
-        nastya_spb_room:'worried', nastya_wed_money:'thoughtful', nastya_wedding:'happy', nastya_spb_mom:'crying',
-        nastya_spb_boss:'worried', nastya_wed_fight:'lost', nastya_spb_discharge:'relief', nastya_wed_jealous:'crying',
-        nastya_wed_vahta:'thoughtful', nastya_spb_choice:'thoughtful',
+        school:'determined', nastya_spb_room:'worried', nastya_wed_money:'thoughtful', nastya_d_sleep:'tired',
+        nastya_d_gossip:'thoughtful', nastya_d_igor:'determined', nastya_d_energy:'calm', uzi:'pregnant', nastya_uzi_alone:'pregnant',
+        nastya_d_vape:'thoughtful', nastya_wedding:'wedding', nastya_spb_mom:'crying', money:'worried', nastya_luba_help:'relief',
+        nastya_d_gaming:'worried', h_money:'shocked', nastya_ultimatum:'determined', nastya_den_job:'happy', nastya_shram:'worried',
+        nastya_d_nightout:'angry', nastya_d_flowers:'relief', nastya_d_doctor:'pregnant', h_police:'shocked', nastya_spb_boss:'worried',
+        nastya_wed_fight:'lost', collect:'lost', h_court:'crying', nastya_new_guy:'happy', bag:'pregnant',
+        // глава 4
+        birth:'labor', nastya_birth_alone:'labor', nastya_birth_spb:'labor', nastya_birth_spb2:'labor',
+        born:'with_baby', nastya_born_alone:'with_baby',
+        // глава 5
+        discharge:'with_baby', discharge_p:'with_baby', nastya_discharge_alone:'with_baby', nastya_discharge_quiet:'with_baby',
+        nastya_spb_discharge:'with_baby', night:'tired', nastya_d_neighbor:'lost', nastya_d_svek:'calm', nastya_d_lecture2:'tired',
+        allowance:'worried', nastya_wed_jealous:'angry', h_letter:'thoughtful', nastya_legit_life:'happy', nastya_d_formula:'tired',
+        nastya_d_nails:'happy', party:'thoughtful', nastya_d_vacc:'worried', h_visit:'worried', nastya_den_playground:'with_baby',
+        nastya_d_vahta:'thoughtful', nastya_igor2:'relief', nastya_igor_leave:'crying', nastya_luba_letter:'thoughtful',
+        nastya_release:'shocked', college:'determined', nastya_relapse_test:'worried', nastya_kostya2:'thoughtful',
+        nastya_wed_vahta:'thoughtful', nastya_spb_choice:'thoughtful', bday:'with_baby',
       },
       // «что было дальше»: картинка по самому сильному изменению шкалы
       react:{ 'n+':'lost', 'n-':'relief', 'g+':'happy', 'g-':'crying', 'p+':'relief', 'p-':'worried',
