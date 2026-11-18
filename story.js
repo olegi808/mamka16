@@ -36,23 +36,24 @@ const HEROES = [
         role:'лучшая подруга', desc:'Дружите с первого класса. Громкая, смелая, всегда прикроет перед мамой. Иногда даёт очень плохие советы.'},
     guy:{name:'Дэн', key:'guy_hood', emo:'🧢', type:'пацан с Заречного, 17', pitch:.75,
         // Иллюстрации Дэна: img/guy/den/ — показываются, когда говорит он
-        // эмоции: cocky (ухмылка) chill (развалился на лавке) tender (с розами) jealous (с телефоном)
+        // эмоции: cocky (ухмылка) chill (развалился на лавке) tender (с розами) jealous (с телефоном) sullen (насупился)
         //         shocked stressed (за голову) serious (на лавке) money scared prison sorry (с лилиями) dad
-        art:{ dir:'img/guy/den/', ext:'.jpg', files:{ cocky:'cocky.webp', tender:'tender.webp' },
+        //         angry (у костра) wedding work (шиномонтаж) vahta (север)
+        art:{ dir:'img/guy/den/', ext:'.jpg',
           def:'serious', avatar:'cocky', alias:['Письмо'],
           scenes:{ nastya_svek:'serious', nastya_meet:'cocky', nastya_chat:'chill', nastya_date:'tender', nastya_lake:'chill',
                    nastya_jealous:'jealous', nastya_ring:'tender', nastya_tell:'shocked', where:'stressed',
                    uzi:'stressed', money:'stressed', h_money:'money', h_police:'scared', h_court:'prison',
-                   h_letter:'prison', h_visit:'prison', allowance:'cocky', nastya_d_gaming:'chill', nastya_d_nightout:'cocky',
-                   nastya_d_flowers:'sorry', nastya_d_vahta:'serious', bday:'dad',
+                   h_letter:'prison', h_visit:'prison', allowance:'cocky', nastya_d_gaming:'chill', nastya_d_nightout:'sullen',
+                   nastya_d_flowers:'sorry', nastya_d_vahta:'vahta', bday:'dad',
                    // новые ветки
-                   nastya_school_wait:'cocky', nastya_cafe_broke:'stressed', nastya_lake_fight:'serious',
-                   nastya_lake_stories:'cocky', nastya_control:'jealous', nastya_ultimatum:'stressed',
-                   nastya_den_job:'serious', nastya_shram:'stressed', nastya_legit_life:'dad',
+                   nastya_school_wait:'cocky', nastya_cafe_broke:'stressed', nastya_lake_fight:'angry',
+                   nastya_lake_stories:'cocky', nastya_control:'jealous', nastya_ultimatum:'sullen',
+                   nastya_den_job:'work', nastya_shram:'stressed', nastya_legit_life:'work',
                    nastya_release:'sorry', nastya_relapse_test:'stressed', nastya_discharge_alone:'sorry',
-                   nastya_proposal:'tender', nastya_wed_money:'cocky', nastya_wedding:'tender', nastya_run_offer:'serious',
-                   nastya_spb_room:'chill', nastya_spb_boss:'jealous', nastya_wed_fight:'stressed', nastya_spb_discharge:'dad',
-                   nastya_wed_jealous:'scared', nastya_wed_vahta:'serious', nastya_spb_choice:'serious', night:'serious', nastya_den_playground:'sorry', nastya_birth_spb:'shocked', nastya_birth_spb2:'stressed' } },
+                   nastya_proposal:'tender', nastya_wed_money:'cocky', nastya_wedding:'wedding', nastya_run_offer:'serious',
+                   nastya_spb_room:'chill', nastya_spb_boss:'jealous', nastya_wed_fight:'sullen', nastya_spb_discharge:'dad',
+                   nastya_wed_jealous:'scared', nastya_wed_vahta:'vahta', nastya_spb_choice:'serious', night:'serious', nastya_den_playground:'sorry', nastya_birth_spb:'shocked', nastya_birth_spb2:'stressed' } },
         role:'парень, 17', desc:'Пацан с Заречного. Школу почти бросил, «подрабатывает с пацанами». Обаятельный, ревнивый, может быть очень нежным. Его отец сидит в тюрьме.'},
     svek:{name:'Тётя Люба', emo:'👵', role:'мама Дэна', desc:'Торгует на рынке и тянет сына одна. Добрая, но давно смирилась: «он в отца пошёл».'},
     // Иллюстрации героини: img/hero/nastya/<эмоция>.jpg
@@ -535,6 +536,7 @@ const STORY = [
    lines:[['','ЗАГС, потом столовая на районе. Ты в белом, живот уже видно. Дэн в костюме, который ему мал.','wed_simple'],
           ['','Ресторан «Венеция». Лимузин, сто гостей, тамада с баяном. Живот под платьем уже не спрятать.','wed_big'],
           ['','Мама поправляет тебе фату и шепчет: «Красивая. Красивее меня».','mom_blessing'],
+          ['{g}','(поправляет пиджак, который ему мал) Ну чё, жена. Красиво стоим?'],
           ['{P2}','(с бокалом) Горько! И чтоб без глупостей, Денис!'],
           ['','В дверях появляется Шрам. Пьяный, без приглашения.'],
           ['Шрам','О, жених! А чё друга не позвал? Я с подарком!'],
