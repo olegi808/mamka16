@@ -95,7 +95,7 @@ const HEROES = [
     castArt:{
       '{P1}':{ dir:'img/char/mom/', ext:'.jpg', def:'tired', avatar:'warm',
         // эмоции: tired stern angry shocked crying warm worried happy
-        scenes:{ nastya_catch:'tired', sick:'warm', test:'stern', mom_finds:'shocked', nastya_council:'stern',
+        scenes:{ nastya_catch:'tired', sick:'tired', test:'stern', mom_finds:'shocked', nastya_council:'stern',
                  nastya_svek_alone:'worried', nastya_wed_parents:'angry', where:'stern', nastya_wed_money:'warm',
                  nastya_d_sleep:'angry', nastya_spb_mom:'crying', bag:'warm', discharge:'stern', night:'tired',
                  nastya_d_lecture2:'tired', nastya_legit_life:'worried', nastya_igor_leave:'crying', college:'warm',

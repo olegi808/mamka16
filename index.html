@@ -648,7 +648,9 @@ function meetCast(sp){
   const c = map[sp] || (hero.extra||[]).find(x=>x.name===sp);
   if(!c || !c.desc) return null;
   S.met[sp] = 1;
-  return {...c, shown: spName(sp), male: isMale(sp)};
+  // портрет из иллюстраций персонажа (мама, Игорь, Лиза, тётя Люба, Шрам, Костя…)
+  const pic = c.pic || artPic(c.art) || artPic(hero.castArt && hero.castArt[sp]);
+  return {...c, pic, shown: spName(sp), male: isMale(sp)};
 }
 function introEl(c, label){
   const el = document.createElement('div');
