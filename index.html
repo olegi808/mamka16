@@ -272,7 +272,10 @@ const haptic = t => { try{ tg && tg.HapticFeedback && tg.HapticFeedback.impactOc
 function load(k,d){ try{ const v=localStorage.getItem('m16_'+k); return v?JSON.parse(v):d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem('m16_'+k, JSON.stringify(v)); }catch(e){} }
 
-let meta = load('meta', {energy:3, stars:0, ends:[]});
+// сохранение могло испортиться (null, обрывок) — достраиваем недостающее, а не падаем
+let meta = Object.assign({energy:3, stars:0, ends:[]}, load('meta', null) || {});
+if(!Array.isArray(meta.ends)) meta.ends = [];
+if(typeof meta.energy !== 'number') meta.energy = 3;
 
 /* ================= СЕРВЕР (база игроков, статистика, оплата) =================
    Игра работает и без сервера: если /api недоступен, всё остаётся как в прототипе. */

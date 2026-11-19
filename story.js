@@ -118,6 +118,11 @@ const HEROES = [
       'Костя':{ dir:'img/char/kostya/', ext:'.jpg', def:'shy', avatar:'shy',
         // эмоции: shy caring hopeful happy
         scenes:{ nastya_new_guy:'shy', nastya_kostya2:'caring|hopeful', bday:'happy' } },
+      'Шрам':{ dir:'img/char/shram/', ext:'.jpg', def:'smirk', avatar:'smirk',
+        // эмоции: smirk drunk bloody party menacing; на свадьбе вторая реплика («нос твой я не забыл») — с разбитым носом
+        scenes:{ nastya_lake_fight:'drunk', nastya_wedding:'party|bloody', nastya_shram:'smirk', nastya_relapse_test:'menacing' } },
+      'Тоха':   { dir:'img/char/toha/',  ext:'.jpg', def:'filming', scenes:{} },
+      'Сторис': { dir:'img/char/alena/', ext:'.jpg', def:'stories', scenes:{} },   // сторис Дэна с Алёной, сестрой Шрама
       // эпизодические — по одной картинке (у врача две)
       'Классуха':  { dir:'img/char/teacher/',      ext:'.jpg', def:'stern',   scenes:{} },
       'Врач':      { dir:'img/char/doctor/',       ext:'.jpg', def:'stern',   scenes:{ uzi:'smile', nastya_uzi_alone:'smile' } },
@@ -312,7 +317,7 @@ const STORY = [
 
   // ВЕТКА: не поехала → ревность
   {id:'nastya_lake_stories', hero:'nastya', if:'lake_no', who:'Воскресенье, ночь', av:'📱', bg:'#e6e0ff',
-   lines:[['','В сторис Дэна: озеро, костёр и рыжая девчонка у него на плече.'],
+   lines:[['Сторис','Дэн: озеро, костёр 🔥 и рыжая девчонка у него на плече.'],
           ['{F}','Это Алёна, сестра Шрама. Она за всеми пацанами бегает.'],
           ['Ты','(два дня не отвечал. А тут — сторис)']],
    l:{t:'Написать ей гадость', fx:{n:10,g:-5}, set:['jealous_me'], res:'Она отправила скрин твоего сообщения в общий чат пацанов. Дэн написал: «ты чё творишь». Над тобой смеялся весь двор.'},
