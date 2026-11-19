@@ -1304,10 +1304,8 @@ function rememberEnd(id, title, items, tip, stage){
 function showEndInfo(id){
   const e = ENDS[id], info = (meta.endInfo||{})[id];
   const body = info
-    ? `<div class="meta" style="margin-bottom:10px">Последний раз: <b>${info.hero}</b> (парень — ${info.guy}) · ${info.stage} · ${info.date}</div>
-       ${whyHTML(info.title, info.items||[], info.tip)}
-       <div class="meta">Шкалы в тот момент: ${info.stats}</div>
-       <div class="meta">Получали: ${info.heroes.join(', ')}</div>`
+    ? `${whyHTML(info.title, info.items||[], info.tip)}
+       <div class="meta">Шкалы в тот момент: ${info.stats}</div>`
     : `<div class="meta" style="margin-bottom:14px">Подробности появятся, когда получишь эту концовку ещё раз.</div>`;
   modal(`
     <div class="e">${e.e}</div>
