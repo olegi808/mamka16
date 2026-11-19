@@ -111,6 +111,10 @@ const HEROES = [
                  nastya_control:'pensive', sick:'worried', nastya_den_gone:'pensive', nastya_run_night:'crying',
                  nastya_d_gossip:'hurt', nastya_d_vape:'vape', money:'sly', discharge_p:'excited',
                  nastya_d_nails:'excited', party:'excited' } },
+      'Свекровь':{ dir:'img/char/luba/', ext:'.jpg', def:'tired', avatar:'kind',
+        // эмоции: tired kind bossy worried stern scared sad stroller night
+        scenes:{ nastya_svek:'tired', nastya_svek_alone:'kind', nastya_wed_money:'worried', nastya_luba_help:'stroller',
+                 h_police:'scared', night:'night', nastya_d_svek:'bossy', nastya_luba_letter:'sad', nastya_wed_vahta:'stern' } },
     },
     extra:[
       {name:'Шрам', emo:'😈', role:'друг Дэна, 20', male:true,
@@ -665,7 +669,7 @@ const STORY = [
    lines:[['','Звонок в дверь. Потом удары.'],['Полиция','Открываем! Полиция!'],
           ['Полиция','Денис Ковалёв здесь проживает?','at_svek'],
           ['Полиция','Ковалёв Денис у вас? Соседи видели, как он заходил.','!at_svek'],
-          ['','За твоей спиной из комнаты выглядывает тётя Люба. Белая, как простыня.','at_svek'],
+          ['Свекровь','(выглядывает из комнаты, белая как простыня) Господи… Опять. Как тогда, с отцом…','at_svek'],
           ['','За твоей спиной в коридор выходит Игорь в трусах и майке. Мама на смене.','!at_svek'],
           ['{g}','(шёпотом из комнаты) Скажи, что меня нет. Умоляю.']],
    l:{t:'«Его нет»', fx:{n:15,g:10,p:-10}, set:['covered'], res:'Они ушли. Через три дня его всё равно взяли — у подъезда, при всех.'},
