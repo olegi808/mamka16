@@ -100,6 +100,11 @@ const HEROES = [
                  nastya_d_sleep:'angry', nastya_spb_mom:'crying', bag:'warm', discharge:'stern', night:'tired',
                  nastya_d_lecture2:'tired', nastya_legit_life:'worried', nastya_igor_leave:'crying', college:'warm',
                  nastya_spb_choice:'crying', bday:'happy' } },
+      '{P2}':{ dir:'img/char/igor/', ext:'.jpg', def:'grumpy', avatar:'grumpy',
+        // эмоции: grumpy smirk angry awkward toast soft leaving grandpa
+        scenes:{ nastya_igor:'grumpy', nastya_den_gone:'smirk', nastya_council:'angry', nastya_wed_parents:'smirk',
+                 where:'awkward', nastya_d_igor:'grumpy', nastya_wedding:'toast', nastya_discharge_quiet:'soft',
+                 nastya_igor2:'soft', nastya_igor_leave:'leaving', bday:'grandpa' } },
     },
     extra:[
       {name:'Шрам', emo:'😈', role:'друг Дэна, 20', male:true,
@@ -1008,7 +1013,7 @@ const STORY = [
           ['','Дэн пришёл с огромным зайцем и стоит в дверях, не зная, куда его деть.','den_visits'],
           ['','На столе — открытка из колонии, нарисованная шариковой ручкой.','waiting&!den_home&!den_probation'],
           ['Костя','(зажигает свечку) Загадывай, малая. Ой, то есть — помогай маме загадывать.','kostya_yes'],
-          ['','Игорь надувает шарики и делает вид, что это не он плакал на кухне.','igor_peace'],
+          ['{P2}','(с внучкой на плечах) Ну что, малая, год! Держись крепче — дед за рулём.','igor_peace'],
           ['','Игорь остался. С тобой он по-прежнему почти не разговаривает, но шарики надул он.','igor_stayed'],
           ['Ты','(Игорь так и не вернулся. Мама делает вид, что ей всё равно)','igor_gone'],
           ['{P1}','Ну что, мамочка. Год прошёл.','!run'],
