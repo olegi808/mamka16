@@ -149,7 +149,8 @@
       <div class="logo">МАМКА<br>В 16<small>СИМУЛЯТОР ВЫЖИВАНИЯ</small></div>
       <div class="bigemo" id="m-avatar">🤰</div>
       <div class="girl" id="girl"></div>
-      <button class="cta" id="btn-start">Начать историю · ⚡1</button>
+      <button class="cta" id="btn-cont" style="display:none">▶ Продолжить</button>
+      <button class="cta" id="btn-start">Начать историю</button>
       <button class="ghost" id="btn-cast">👥 Кто есть кто</button>
       <button class="ghost" id="btn-reroll">🎲 Случайная героиня</button>
       <div class="small">Открыто концовок: <b id="m-ends">0</b> / <span id="m-ends-total"></span></div>
@@ -258,8 +259,8 @@ const ENDS = {
 
 const SHOP = [
   {id:'chance5',  e:'🔁', t:'Второй шанс ×5', d:'Откат на 3 хода назад после проигрыша', p:59},
-  {id:'energy10', e:'⚡', t:'Энергия ×10', d:'10 новых жизней', p:49},
-  {id:'sub',      e:'👑', t:'Подписка «Королева района»', d:'Безлимит энергии · без рекламы · все премиум-ветки', p:199, badge:'ХИТ', per:'/мес'},
+  {id:'energy10', e:'⚡', t:'Энергия ×10', d:'10 глав без ожидания', p:49},
+  {id:'sub',      e:'👑', t:'Подписка «Королева района»', d:'Все главы без энергии · без рекламы · все премиум-ветки', p:199, badge:'ХИТ', per:'/мес'},
   {id:'twins',    e:'👶👶', t:'Ветка «Двойня»', d:'+12 сцен, 2 новые концовки', p:99},
   {id:'moscow',   e:'🏙️', t:'Ветка «Сбежала в Москву»', d:'+15 сцен, 3 новые концовки', p:99},
   {id:'hints20',  e:'🔮', t:'Подсказки ×20', d:'Показывает, куда двинется шкала', p:29},
@@ -276,6 +277,70 @@ function save(k,v){ try{ localStorage.setItem('m16_'+k, JSON.stringify(v)); }cat
 let meta = Object.assign({energy:3, stars:0, ends:[]}, load('meta', null) || {});
 if(!Array.isArray(meta.ends)) meta.ends = [];
 if(typeof meta.energy !== 'number') meta.energy = 3;
+
+/* ================= ЭНЕРГИЯ ЗА ГЛАВЫ =================
+   Глава 1 бесплатно, каждая следующая — ⚡1. Энергия сама копится до ENERGY_MAX: +1 раз в REGEN_MS.
+   Купленная энергия может быть больше максимума — тогда таймер стоит, пока не потратишь лишнее.
+   Раз в день за вход +1 ⚡. Подписка — главы без энергии. */
+const ENERGY_MAX = 3, REGEN_MS = 2*3600*1000, CHAPTER_COST = 1;
+// главы без оплаты: 1 — знакомство, 4 — «Роды» (всего 2 сцены, платить за них нечестно)
+const FREE_CHAPS = [1, 4];
+const subActive = () => meta.subUntil > Date.now();
+function regen(){
+  const now = Date.now();
+  if(meta.energy >= ENERGY_MAX){ meta.regenAt = null; return; }
+  if(!meta.regenAt) meta.regenAt = now + REGEN_MS;
+  while(meta.regenAt && now >= meta.regenAt && meta.energy < ENERGY_MAX){
+    meta.energy++; meta.regenAt = meta.energy < ENERGY_MAX ? meta.regenAt + REGEN_MS : null;
+  }
+  save('meta', meta);
+}
+function spendEnergy(n){
+  if(subActive()) return true;
+  regen();
+  if(meta.energy < n) return false;
+  meta.energy -= n;
+  if(meta.energy < ENERGY_MAX && !meta.regenAt) meta.regenAt = Date.now() + REGEN_MS;
+  save('meta', meta); renderMenu();
+  return true;
+}
+// сколько ждать следующую энергию: «1:23:45» (или '' если энергия полная)
+function regenLeft(){
+  if(!meta.regenAt || meta.energy >= ENERGY_MAX) return '';
+  const s = Math.max(0, Math.ceil((meta.regenAt - Date.now())/1000));
+  const h = Math.floor(s/3600), m = Math.floor(s%3600/60), sec = s%60;
+  return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+function energyLabel(){
+  if(subActive()) return '⚡ ∞';
+  const t = regenLeft();
+  return meta.energy > ENERGY_MAX ? `⚡ ${meta.energy}` : `⚡ ${meta.energy}/${ENERGY_MAX}${t ? ' · ' + t.replace(/:\d\d$/,'') : ''}`;
+}
+// ежедневный бонус за вход
+(function daily(){
+  const today = new Date().toDateString();
+  if(!meta.dailyAt){ meta.dailyAt = today; save('meta', meta); return; }   // первый запуск — без бонуса
+  if(meta.dailyAt !== today){
+    meta.dailyAt = today; meta.energy += 1; save('meta', meta);
+    setTimeout(()=>{ try{ renderMenu(); }catch(e){} toast('🎁 +1 ⚡ за ежедневный вход', 3000); }, 1200);
+  }
+})();
+regen();
+// раз в секунду обновляем энергию и таймеры на экране
+setInterval(()=>{
+  regen();
+  const pill = document.getElementById('m-energy'); if(pill) pill.textContent = energyLabel();
+  const t = document.getElementById('en-timer'); if(t) t.textContent = regenLeft() || 'уже есть!';
+}, 1000);
+
+/* ================= СОХРАНЕНИЕ ПАРТИИ =================
+   Партия сохраняется после каждой карточки: закрыла игру — продолжишь с того же места. */
+let chapStart = null, paidChaps = {};
+const runKey = () => 'run_' + hero.id;
+function saveRun(){ if(S && hero) save(runKey(), {S, chapStart, paidChaps, t:Date.now()}); }
+function loadRun(){ return hero ? load(runKey(), null) : null; }
+function clearRun(){ try{ localStorage.removeItem('m16_' + runKey()); }catch(e){} chapStart = null; paidChaps = {}; }
+const chapNum = ch => parseInt(String(ch||'').replace(/\D+/,''), 10) || 1;
 
 /* ================= СЕРВЕР (база игроков, статистика, оплата) =================
    Игра работает и без сервера: если /api недоступен, всё остаётся как в прототипе. */
@@ -327,7 +392,10 @@ function grant(id){
   save('meta', meta);
 }
 let hero = null, S = null, hist = [];
-const DIFF = 0.85;    // сила эффектов (больше — сложнее)
+const DIFF = 0.85;    // сила эффектов (больше — сложнее); у героини может быть своя: hero.diff
+const diff = () => (hero && hero.diff) || DIFF;
+// поправка силы по шкале и направлению: hero.fxMul = {'p-':0.8, 'm+':1.3, …} — чтобы досрочные концовки выпадали поровну
+const fxMul = (k, v) => (hero && hero.fxMul && hero.fxMul[k + (v > 0 ? '+' : '-')]) || 1;
 const FILL_CHANCE = .5; // шанс бытовой сцены между главными
 // опасны ОБА края шкалы
 // подсказки по шкалам (нажатие на шкалу в игре)
@@ -402,6 +470,7 @@ function newHero(step){
     `<span style="font-size:12px;opacity:.7">🏆 Пройдено концовок за неё: ${done}</span>`;
   document.getElementById('h-prev').onclick = ()=>{ newHero(-1); haptic(); };
   document.getElementById('h-next').onclick = ()=>{ newHero(1); haptic(); };
+  try{ renderMenu(); }catch(e){}   // кнопка «Продолжить» — у каждой героини своя
 }
 // склонение женских имён на -а/-я: р — родительный (кого?), д — дательный (кому?),
 // в — винительный (кого?), т — творительный (кем?). Алиса → Алисы/Алисе/Алису/Алисой
@@ -444,15 +513,57 @@ function ok(c){
 }
 
 /* ================= ДВИЖОК ================= */
-function startGame(){
-  const subOn = meta.subUntil > Date.now();   // подписка — безлимит энергии
-  if(!subOn && meta.energy<=0) return noEnergy();
-  if(!subOn) meta.energy--; save('meta',meta); renderMenu();
+// «Начать историю»: глава 1 бесплатная. Если есть сохранённая партия — сначала спросим.
+function startGame(force){
+  if(!force && loadRun()){
+    modal(`
+      <div class="e">⚠️</div>
+      <h2>Начать заново?</h2>
+      <p>У тебя есть сохранённая история ${hero.name}. Если начать заново, этот прогресс пропадёт.</p>
+      <button class="cta" id="m-cont">▶ Продолжить, где остановилась</button>
+      <button class="ghost" id="m-new">Начать заново</button>`);
+    document.getElementById('m-cont').onclick = ()=>{ closeModal(); continueGame(); };
+    document.getElementById('m-new').onclick = ()=>{ closeModal(); startGame(true); };
+    return;
+  }
+  clearRun();
   S = {i:0, w:0, chap:'', st:{m:50,n:45,p:55,g:50,b:50}, flags:{}, usedF:{}, fill:0, baby:'', card:null};
   track('start');
   hist = [];
   go('game'); buildStats(); nextCard();
   if(!load('statHint', false)){ save('statHint', true); setTimeout(()=>toast('💡 Нажми на любую шкалу — узнаешь, как её поднять', 4000), 1500); }
+}
+// «Продолжить»: возвращаемся в сохранённую партию
+function continueGame(){
+  const r = loadRun(); if(!r) return startGame(true);
+  S = r.S; chapStart = r.chapStart; paidChaps = r.paidChaps || {}; hist = [];
+  go('game'); buildStats();
+  if(S.dead) return lose(S.dead);            // закрыла игру на экране проигрыша
+  if(S.gate) return chapterGate(S.gate);     // остановилась перед новой главой
+  if(S.card) { renderCard(); playMusic(sceneMusic()); } else nextCard();
+}
+// граница главы: показать «Глава пройдена» и взять ⚡ за следующую
+function chapterGate(nextChap){
+  S.gate = nextChap; saveRun();
+  const done = S.chap.split('·'), next = nextChap.split('·');
+  const free = subActive();
+  const go_on = ()=>{
+    paidChaps[nextChap] = 1; S.gate = null;
+    chapStart = JSON.parse(JSON.stringify(S));   // точка для «начать главу заново»
+    closeModal(); nextCard();
+  };
+  modal(`
+    <div class="e">✨</div>
+    <h2>${(done[0]||'').trim()} пройдена!</h2>
+    <p>Дальше — <b>${(next[0]||'').trim()}:${next[1]||''}</b></p>
+    <div class="meta">${free ? '👑 Подписка: главы без энергии' : `У тебя ${energyLabel()}`}</div>
+    <button class="cta gold" id="m-next">Дальше · ${free ? '👑' : '⚡' + CHAPTER_COST}</button>
+    <button class="ghost" id="m-later">Продолжу позже</button>`);
+  document.getElementById('m-next').onclick = ()=>{
+    if(spendEnergy(CHAPTER_COST)) go_on();
+    else noEnergy(()=>{ if(spendEnergy(CHAPTER_COST)) go_on(); else chapterGate(nextChap); });
+  };
+  document.getElementById('m-later').onclick = ()=>{ closeModal(); go('menu'); toast('💾 История сохранена', 2500); };
 }
 
 function nextBeatW(){
@@ -473,14 +584,21 @@ function nextCard(){
   }
   while(S.i < STORY.length && !ok(STORY[S.i])) S.i++;
   if(S.i >= STORY.length) return finale();
-  const b = STORY[S.i++];
+  const b = STORY[S.i];
+  // новая глава (кроме первой) стоит энергию
+  if(b.chap && S.chap && b.chap !== S.chap && !paidChaps[b.chap]){
+    if(!FREE_CHAPS.includes(chapNum(b.chap))) return chapterGate(b.chap);
+    paidChaps[b.chap] = 1; chapStart = JSON.parse(JSON.stringify(S));   // бесплатная глава — просто идём дальше
+  }
+  if(b.chap && !S.chap) chapStart = JSON.parse(JSON.stringify(S));   // начало главы 1
+  S.i++;
   if(b.w) S.w = Math.max(S.w, b.w);
   if(b.chap) S.chap = b.chap;
   S.fill = (S.w >= 12 && !/bday$/.test(b.id) && Math.random() < FILL_CHANCE) ? 1 : 0;
   show(b);
 }
 
-function show(c){ S.card = c; renderCard(); playMusic(sceneMusic()); }
+function show(c){ S.card = c; saveRun(); renderCard(); playMusic(sceneMusic()); }
 
 function choose(side){
   const c = S.card;
@@ -490,7 +608,7 @@ function choose(side){
   stopVoice();
   const love = !has('pregnant') && !(both.set||[]).includes('pregnant');
   const fx = {};
-  for(const k in (ch.fx||{})){ const v = Math.round(ch.fx[k]*DIFF); if(v) fx[k]=v; }
+  for(const k in (ch.fx||{})){ const v = Math.round(ch.fx[k]*diff()*fxMul(k, ch.fx[k])); if(v) fx[k]=v; }
   // журнал решений — для объяснения концовки
   S.log = S.log || [];
   S.log.push({who:sub(c.who||''), t:sub(ch.t), fx, set:[...(ch.set||[]),...(both.set||[])], chap:S.chap});
@@ -976,6 +1094,7 @@ function statsLine(){
 
 function lose(endId){
   const e = ENDS[endId]; const isNew = unlock(endId); haptic('heavy'); stopVoice(); playMusic('bad');
+  S.dead = endId; saveRun();   // закрыла игру на проигрыше — при входе снова покажем этот экран
   track('death', {result:endId});
   const k = endId[0], dir = endId.endsWith('100') ? 1 : -1;
   const culprits = (S.log||[]).filter(x=>x.fx[k] && x.fx[k]*dir>0).slice(-4).reverse()
@@ -989,18 +1108,28 @@ function lose(endId){
     <div class="meta">${hero.name} дошла до: ${S.chap.split('·')[1]||S.chap} ${isNew?'· <b style="color:#ffc83d">новая концовка!</b>':''}</div>
     <button class="cta gold" id="m-chance">🔁 Второй шанс · ${meta.chances>0 ? `осталось ${meta.chances}` : "⭐ 15"}</button>
     <button class="ghost" id="m-ad">📺 Посмотреть рекламу и вернуться</button>
+    ${chapStart ? `<button class="ghost" id="m-restart">↩️ Начать главу заново${FREE_CHAPS.includes(chapNum(S.chap)) ? '' : subActive() ? ' · 👑' : ' · ⚡' + CHAPTER_COST}</button>` : ''}
     <button class="ghost" id="m-share">📤 Поделиться концовкой</button>
     <button class="ghost" id="m-menu">В меню</button>`);
   document.getElementById('m-chance').onclick = ()=>{ if(meta.chances>0){ meta.chances--; save('meta',meta); rewind(); } else pay('chance1', rewind); };
   document.getElementById('m-ad').onclick = ()=> watchAd(rewind);
+  const rs = document.getElementById('m-restart');
+  if(rs) rs.onclick = ()=>{
+    const again = ()=>{ S = JSON.parse(JSON.stringify(chapStart)); hist = []; closeModal(); go('game'); buildStats(); nextCard(); toast('↩️ Глава с начала'); };
+    if(FREE_CHAPS.includes(chapNum(S.chap)) || spendEnergy(CHAPTER_COST)) again();
+    else noEnergy(()=>{ if(spendEnergy(CHAPTER_COST)) again(); });
+  };
   document.getElementById('m-share').onclick = ()=> share(e);
-  document.getElementById('m-menu').onclick = ()=>{ closeModal(); go('menu'); };
+  document.getElementById('m-menu').onclick = ()=>{ clearRun(); closeModal(); go('menu'); };
 }
 
 function rewind(){
-  const back = hist.length>=3 ? hist[hist.length-3] : hist[0];
-  S = JSON.parse(JSON.stringify(back)); hist = [];
-  closeModal(); go('game'); buildStats(); renderCard(); playMusic(sceneMusic());
+  // после перезапуска игры истории ходов нет — откатываемся к началу главы
+  const back = hist.length>=3 ? hist[hist.length-3] : (hist[0] || chapStart);
+  if(!back){ closeModal(); go('menu'); return; }
+  S = JSON.parse(JSON.stringify(back)); S.dead = null; hist = [];
+  closeModal(); go('game'); buildStats();
+  if(S.card){ renderCard(); playMusic(sceneMusic()); } else nextCard();
   toast('⏪ Откат на 3 хода назад');
 }
 
@@ -1020,6 +1149,7 @@ function finale(){
         : (st.g >= 55 && !f.prison && !f.kicked) ? 'f_family' : 'f_solo';
   const e = ENDS[id]; const isNew = unlock(id); haptic('heavy'); playMusic('good');
   track('end', {result:id});
+  clearRun();   // история пройдена — сохранение больше не нужно
   // ключевые решения, которые определили концовку
   let title, items;
   const fw = FIN_WHY[id];
@@ -1050,19 +1180,25 @@ function finale(){
   document.getElementById('m-menu').onclick = ()=>{ closeModal(); go('menu'); };
 }
 
-function noEnergy(){
+// энергии не хватает: купить, реклама, подписка или ждать. onGot — что сделать, когда энергия появилась
+function noEnergy(onGot){
+  const inGame = document.getElementById('s-game').classList.contains('on');
+  const got = (msg)=>{ closeModal(); renderMenu(); toast(msg); if(onGot) setTimeout(onGot, 300); };
   modal(`
     <div class="e">🔋</div>
     <h2>Энергия кончилась</h2>
-    <p>Новая жизнь через 2:59:12. Или прямо сейчас:</p>
+    <p>Следующая ⚡ через <b id="en-timer">${regenLeft() || '…'}</b>.<br>Или продолжай прямо сейчас:</p>
     <button class="cta gold" id="m-buy">⚡ ×10 за ⭐ 49</button>
     <button class="ghost" id="m-ad">📺 Реклама = +1 ⚡</button>
-    <button class="ghost" id="m-sub">👑 Подписка — безлимит</button>
-    <button class="ghost" id="m-close">Подожду</button>`);
-  document.getElementById('m-buy').onclick = ()=> pay('energy10', ()=>{ closeModal(); renderMenu(); toast('+10 ⚡'); });
-  document.getElementById('m-ad').onclick = ()=> watchAd(()=>{ meta.energy+=1; save('meta',meta); closeModal(); renderMenu(); toast('+1 ⚡'); });
-  document.getElementById('m-sub').onclick = ()=>{ closeModal(); go('shop'); };
-  document.getElementById('m-close').onclick = closeModal;
+    <button class="ghost" id="m-sub">👑 Подписка — главы без энергии</button>
+    <button class="ghost" id="m-close">${inGame ? 'Подожду — сохранить и выйти' : 'Подожду'}</button>`);
+  document.getElementById('m-buy').onclick = ()=> pay('energy10', ()=> got('+10 ⚡'));
+  document.getElementById('m-ad').onclick = ()=> watchAd(()=>{ meta.energy+=1; save('meta',meta); got('+1 ⚡'); });
+  document.getElementById('m-sub').onclick = ()=> pay('sub', ()=> got('👑 Подписка активна'));
+  document.getElementById('m-close').onclick = ()=>{
+    closeModal();
+    if(inGame){ saveRun(); go('menu'); toast('💾 История сохранена — вернись, когда накопится ⚡', 3500); }
+  };
 }
 
 function pay(itemId, onOk){
@@ -1120,7 +1256,15 @@ function go(name){
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 function renderMenu(){
-  document.getElementById('m-energy').textContent = `⚡ ${meta.energy}/3`;
+  document.getElementById('m-energy').textContent = energyLabel();
+  // есть сохранённая история этой героини — главная кнопка «Продолжить»
+  const r = loadRun(), bc = document.getElementById('btn-cont'), bs = document.getElementById('btn-start');
+  if(bc && bs){
+    bc.style.display = r ? '' : 'none';
+    if(r) bc.textContent = `▶ Продолжить · ${(r.S.gate || r.S.chap || 'Глава 1').split('·')[0].trim()}`;
+    bs.className = r ? 'ghost' : 'cta';
+    bs.textContent = r ? 'Начать заново' : 'Начать историю';
+  }
   document.getElementById('m-stars').textContent = meta.stars;
   document.getElementById('m-ends').textContent = meta.ends.filter(e=>!e.includes(':')).length;
   document.getElementById('m-ends-total').textContent = Object.keys(ENDS).length;
@@ -1188,7 +1332,8 @@ function modal(html){ document.getElementById('sheet').innerHTML = html; documen
 function closeModal(){ document.getElementById('modal').classList.remove('on'); }
 let tt; function toast(t, ms){ const el=document.getElementById('toast'); el.textContent=t; el.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('on'),ms||1600); }
 
-document.getElementById('btn-start').onclick = startGame;
+document.getElementById('btn-start').onclick = ()=> startGame();
+document.getElementById('btn-cont').onclick = continueGame;
 document.getElementById('btn-reroll').onclick = ()=>{ newHero(1+Math.floor(Math.random()*(HEROES.length-1))); haptic(); };
 document.getElementById('btn-exit').onclick = ()=> go('menu');
 
