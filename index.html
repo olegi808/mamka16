@@ -608,11 +608,11 @@ function castOf(h){
   const list = [
     {emo:h.emo, name:h.name, role:'это ты, героиня', desc:h.about, pic:artPic(h.art)},
     {emo:h.guy.emo, name:h.guy.name, role:h.guy.role, desc:h.guy.desc, male:true, pic:artPic(h.guy.art)},
-    {emo:h.p1.emo, name:h.p1.name, role:h.p1.role, desc:h.p1.desc, male:h.p1.g==='m'},
-    {emo:h.p2.emo, name:h.p2.name, role:h.p2.role, desc:h.p2.desc, male:h.p2.g==='m'},
-    {emo:h.f.emo, name:h.f.name, role:h.f.role, desc:h.f.desc},
+    {emo:h.p1.emo, name:h.p1.name, role:h.p1.role, desc:h.p1.desc, male:h.p1.g==='m', pic:artPic(h.castArt && h.castArt['{P1}'])},
+    {emo:h.p2.emo, name:h.p2.name, role:h.p2.role, desc:h.p2.desc, male:h.p2.g==='m', pic:artPic(h.castArt && h.castArt['{P2}'])},
+    {emo:h.f.emo, name:h.f.name, role:h.f.role, desc:h.f.desc, pic:artPic(h.castArt && h.castArt['{F}'])},
   ];
-  if(h.svek) list.push({emo:h.svek.emo, name:h.svek.name, role:h.svek.role, desc:h.svek.desc});
+  if(h.svek) list.push({emo:h.svek.emo, name:h.svek.name, role:h.svek.role, desc:h.svek.desc, pic:artPic(h.castArt && h.castArt['Свекровь'])});
   (h.extra||[]).forEach(x=>list.push(x));
   return list;
 }
@@ -719,11 +719,18 @@ function heroPic(mood, fallback){
   return `<img src="${artFile(a, mood)}" alt="" style="width:100%;max-height:210px;object-fit:cover;object-position:center 30%;border-radius:18px;margin-bottom:6px;box-shadow:0 10px 30px rgba(0,0,0,.4)" onerror="this.outerHTML='<div class=&quot;e&quot;>${fallback}</div>'">`;
 }
 
-function artHTML(c, sp){
-  // говорит парень, и у него есть иллюстрации — показываем его
+// иллюстрации того, кто сейчас говорит: парень (hero.guy.art) или другой персонаж (hero.castArt['{P1}'] и т. п.)
+function speakerArt(sp){
+  if(!sp) return null;
   const ga = hero.guy.art;
-  const guySpeaks = sp && ga && (sp==='{g}' || (ga.alias||[]).includes(sp));
-  const ha = guySpeaks ? artFile(ga, ga.scenes[c.id.replace(/_res$/,'')] || ga.def) : heroArt(c);
+  if(ga && (sp==='{g}' || (ga.alias||[]).includes(sp))) return ga;
+  return (hero.castArt && hero.castArt[sp]) || null;
+}
+function artHTML(c, sp){
+  // говорит персонаж со своими иллюстрациями — показываем его эмоцию в этой сцене, иначе — героиню
+  const sa = speakerArt(sp);
+  const guySpeaks = !!sa;
+  const ha = sa ? artFile(sa, sa.scenes[c.id.replace(/_res$/,'')] || sa.def) : heroArt(c);
   if(ha){
     // у героини есть иллюстрации — показываем её эмоцию в этой сцене
     return `

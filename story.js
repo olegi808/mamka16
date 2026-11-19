@@ -91,6 +91,16 @@ const HEROES = [
       // «что было дальше»: картинка по самому сильному изменению шкалы
       react:{ 'n+':'lost', 'n-':'relief', 'g+':'happy', 'g-':'crying', 'p+':'relief', 'p-':'worried',
               'm+':'happy', 'm-':'worried', 'b+':'relief', 'b-':'worried' } },
+    // Иллюстрации остальных персонажей: img/char/<папка>/<эмоция>.jpg — показываются, когда говорит этот персонаж
+    castArt:{
+      '{P1}':{ dir:'img/char/mom/', ext:'.jpg', def:'tired', avatar:'warm',
+        // эмоции: tired stern angry shocked crying warm worried happy
+        scenes:{ nastya_catch:'tired', sick:'warm', test:'stern', mom_finds:'shocked', nastya_council:'stern',
+                 nastya_svek_alone:'worried', nastya_wed_parents:'angry', where:'stern', nastya_wed_money:'warm',
+                 nastya_d_sleep:'angry', nastya_spb_mom:'crying', bag:'warm', discharge:'stern', night:'tired',
+                 nastya_d_lecture2:'tired', nastya_legit_life:'worried', nastya_igor_leave:'crying', college:'warm',
+                 nastya_spb_choice:'crying', bday:'happy' } },
+    },
     extra:[
       {name:'Шрам', emo:'😈', role:'друг Дэна, 20', male:true,
        desc:'Старший в компании Дэна. Громкий, наглый, всегда при деньгах. Именно он втягивает пацанов в «темы».'},
