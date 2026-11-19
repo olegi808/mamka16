@@ -105,6 +105,12 @@ const HEROES = [
         scenes:{ nastya_igor:'grumpy', nastya_den_gone:'smirk', nastya_council:'angry', nastya_wed_parents:'smirk',
                  where:'awkward', nastya_d_igor:'grumpy', nastya_wedding:'toast', nastya_discharge_quiet:'soft',
                  nastya_igor2:'soft', nastya_igor_leave:'leaving', bday:'grandpa' } },
+      '{F}':{ dir:'img/char/lisa/', ext:'.jpg', def:'sly', avatar:'sly',
+        // эмоции: sly laughing gossip worried hurt crying excited vape pensive
+        scenes:{ nastya_meet:'sly', nastya_school_wait:'laughing', nastya_lake:'sly', nastya_lake_stories:'gossip',
+                 nastya_control:'pensive', sick:'worried', nastya_den_gone:'pensive', nastya_run_night:'crying',
+                 nastya_d_gossip:'hurt', nastya_d_vape:'vape', money:'sly', discharge_p:'excited',
+                 nastya_d_nails:'excited', party:'excited' } },
     },
     extra:[
       {name:'Шрам', emo:'😈', role:'друг Дэна, 20', male:true,
