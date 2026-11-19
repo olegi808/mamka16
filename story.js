@@ -115,6 +115,19 @@ const HEROES = [
         // эмоции: tired kind bossy worried stern scared sad stroller night
         scenes:{ nastya_svek:'tired', nastya_svek_alone:'kind', nastya_wed_money:'worried', nastya_luba_help:'stroller',
                  h_police:'scared', night:'night', nastya_d_svek:'bossy', nastya_luba_letter:'sad', nastya_wed_vahta:'stern' } },
+      'Костя':{ dir:'img/char/kostya/', ext:'.jpg', def:'shy', avatar:'shy',
+        // эмоции: shy caring hopeful happy
+        scenes:{ nastya_new_guy:'shy', nastya_kostya2:'caring|hopeful', bday:'happy' } },
+      // эпизодические — по одной картинке (у врача две)
+      'Классуха':  { dir:'img/char/teacher/',      ext:'.jpg', def:'stern',   scenes:{} },
+      'Врач':      { dir:'img/char/doctor/',       ext:'.jpg', def:'stern',   scenes:{ uzi:'smile', nastya_uzi_alone:'smile' } },
+      'Продавщица':{ dir:'img/char/clerk/',        ext:'.jpg', def:'panic',   scenes:{} },
+      'Акушерка':  { dir:'img/char/midwife/',      ext:'.jpg', def:'smile',   scenes:{} },
+      'Педиатр':   { dir:'img/char/pediatrician/', ext:'.jpg', def:'stern',   scenes:{} },
+      'Полиция':   { dir:'img/char/police/',       ext:'.jpg', def:'door',    scenes:{} },
+      'Адвокат':   { dir:'img/char/lawyer/',       ext:'.jpg', def:'whisper', scenes:{} },
+      'Коллектор': { dir:'img/char/collector/',    ext:'.jpg', def:'call',    scenes:{} },
+      'Соседка':   { dir:'img/char/neighbor/',     ext:'.jpg', def:'angry',   scenes:{} },
     },
     extra:[
       {name:'Шрам', emo:'😈', role:'друг Дэна, 20', male:true,

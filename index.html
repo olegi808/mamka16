@@ -613,7 +613,7 @@ function castOf(h){
     {emo:h.f.emo, name:h.f.name, role:h.f.role, desc:h.f.desc, pic:artPic(h.castArt && h.castArt['{F}'])},
   ];
   if(h.svek) list.push({emo:h.svek.emo, name:h.svek.name, role:h.svek.role, desc:h.svek.desc, pic:artPic(h.castArt && h.castArt['Свекровь'])});
-  (h.extra||[]).forEach(x=>list.push(x));
+  (h.extra||[]).forEach(x=>list.push(Object.assign({pic:artPic(h.castArt && h.castArt[x.name])}, x)));
   return list;
 }
 function showCast(){
@@ -726,11 +726,13 @@ function speakerArt(sp){
   if(ga && (sp==='{g}' || (ga.alias||[]).includes(sp))) return ga;
   return (hero.castArt && hero.castArt[sp]) || null;
 }
-function artHTML(c, sp){
+// n — какая по счёту реплика этого персонажа в сцене; эмоция может быть «caring|hopeful» — по одной на реплику
+function artHTML(c, sp, n){
   // говорит персонаж со своими иллюстрациями — показываем его эмоцию в этой сцене, иначе — героиню
   const sa = speakerArt(sp);
   const guySpeaks = !!sa;
-  const ha = sa ? artFile(sa, sa.scenes[c.id.replace(/_res$/,'')] || sa.def) : heroArt(c);
+  const moods = String((sa && sa.scenes[c.id.replace(/_res$/,'')]) || (sa && sa.def) || '').split('|');
+  const ha = sa ? artFile(sa, moods[Math.min(n || 0, moods.length - 1)]) : heroArt(c);
   if(ha){
     // у героини есть иллюстрации — показываем её эмоцию в этой сцене
     return `
@@ -789,6 +791,7 @@ function renderCard(){
   };
   // реплика может зависеть от прошлых выборов: ['Кто','текст','флаг'] или ['Кто','текст','!флаг']
   const lines = (c.lines || []).filter(l => !l[2] || l[2].split('&').every(q => q[0]==='!' ? !has(q.slice(1)) : has(q)));
+  const spoke = {};   // сколько реплик уже сказал каждый персонаж в этой карточке
   const addLine = (ln) => {
     const [sp, txt] = ln, t = sub(txt);
     const el = document.createElement('div');
@@ -805,7 +808,8 @@ function renderCard(){
     }
     body.appendChild(el);
     // портрет говорящего
-    art.innerHTML = artHTML(c, sp || undefined);
+    const nth = sp ? (spoke[sp] = (spoke[sp] ?? -1) + 1) : 0;
+    art.innerHTML = artHTML(c, sp || undefined, nth);
     art.classList.remove('talk'); void art.offsetWidth; art.classList.add('talk');
     fillChoiceLabels(card, c);
     body.scrollTop = body.scrollHeight;
