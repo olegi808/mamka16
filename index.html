@@ -20,7 +20,7 @@
 
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 12px 2px;font-size:13px}
   .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 11px;display:flex;gap:6px;align-items:center;color:#fff;white-space:nowrap}
-  .chap{font-weight:700;overflow:hidden;text-overflow:ellipsis;flex:1;justify-content:center}
+  .chap{font-weight:700;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;display:block;text-align:center}
   .stats{display:flex;justify-content:space-around;padding:8px 10px 4px}
   .stat{display:flex;flex-direction:column;align-items:center;gap:3px;width:56px;position:relative;cursor:pointer}
   .stat .ico{width:40px;height:40px;border-radius:13px;background:var(--panel);border:1px solid var(--line);position:relative;overflow:hidden;display:grid;place-items:center;font-size:20px}
@@ -285,6 +285,7 @@ if(typeof meta.energy !== 'number') meta.energy = 3;
 const ENERGY_MAX = 3, REGEN_MS = 2*3600*1000, CHAPTER_COST = 1;
 // главы без оплаты: 1 — знакомство, 4 — «Роды» (всего 2 сцены, платить за них нечестно)
 const FREE_CHAPS = [1, 4];
+const freeChaps = () => (hero && hero.freeChaps) || FREE_CHAPS;   // у героини может быть свой список
 const subActive = () => meta.subUntil > Date.now();
 function regen(){
   const now = Date.now();
@@ -546,7 +547,8 @@ function continueGame(){
 function chapterGate(nextChap){
   S.gate = nextChap; saveRun();
   const done = S.chap.split('·'), next = nextChap.split('·');
-  const free = subActive();
+  const sub = subActive(), noCost = freeChaps().includes(chapNum(nextChap));   // глава без энергии
+  const free = sub || noCost;
   const go_on = ()=>{
     paidChaps[nextChap] = 1; S.gate = null;
     chapStart = JSON.parse(JSON.stringify(S));   // точка для «начать главу заново»
@@ -556,11 +558,11 @@ function chapterGate(nextChap){
     <div class="e">✨</div>
     <h2>${(done[0]||'').trim()} пройдена!</h2>
     <p>Дальше — <b>${(next[0]||'').trim()}:${next[1]||''}</b></p>
-    <div class="meta">${free ? '👑 Подписка: главы без энергии' : `У тебя ${energyLabel()}`}</div>
-    <button class="cta gold" id="m-next">Дальше · ${free ? '👑' : '⚡' + CHAPTER_COST}</button>
+    ${noCost ? '' : `<div class="meta">${sub ? '👑 Подписка: главы без энергии' : `У тебя ${energyLabel()}`}</div>`}
+    <button class="cta gold" id="m-next">Дальше${noCost ? '' : sub ? ' · 👑' : ' · ⚡' + CHAPTER_COST}</button>
     <button class="ghost" id="m-later">Продолжу позже</button>`);
   document.getElementById('m-next').onclick = ()=>{
-    if(spendEnergy(CHAPTER_COST)) go_on();
+    if(free || spendEnergy(CHAPTER_COST)) go_on();
     else noEnergy(()=>{ if(spendEnergy(CHAPTER_COST)) go_on(); else chapterGate(nextChap); });
   };
   document.getElementById('m-later').onclick = ()=>{ closeModal(); go('menu'); toast('💾 История сохранена', 2500); };
@@ -587,8 +589,7 @@ function nextCard(){
   const b = STORY[S.i];
   // новая глава (кроме первой) стоит энергию
   if(b.chap && S.chap && b.chap !== S.chap && !paidChaps[b.chap]){
-    if(!FREE_CHAPS.includes(chapNum(b.chap))) return chapterGate(b.chap);
-    paidChaps[b.chap] = 1; chapStart = JSON.parse(JSON.stringify(S));   // бесплатная глава — просто идём дальше
+    return chapterGate(b.chap);   // экран «Глава пройдена» после каждой главы — обрыв на интересном месте
   }
   if(b.chap && !S.chap) chapStart = JSON.parse(JSON.stringify(S));   // начало главы 1
   S.i++;
@@ -619,12 +620,15 @@ function choose(side){
   }
   // нервы понемногу возвращаются к середине (сами по себе не убивают)
   if(!love){ const nv=S.st.n; S.st.n = nv>50 ? Math.max(50, nv-3) : Math.min(50, nv+2); }
+  // у героини с длинной историей остальные шкалы тоже чуть-чуть тянутся к середине (край — 0 или 100 — не спасает)
+  const drift = (hero && hero.drift) || 0;
+  if(!love && drift) for(const k of ['m','p','g','b']){ const v=S.st[k]; if(v>0 && v<100) S.st[k] = v>50 ? Math.max(50, v-drift) : Math.min(50, v+drift); }
   [...(ch.set||[]),...(both.set||[])].forEach(f=>S.flags[f]=1);
   (ch.unset||[]).forEach(f=>{ delete S.flags[f]; });
   if(ch.baby) S.baby = ch.baby;
   // начало беременности: шкалы подтягиваются к середине, чтобы не начинать главу 2 на грани
   if((both.set||[]).includes('pregnant')){
-    for(const k in S.st) S.st[k] = Math.round(50 + (S.st[k]-50)*0.5);
+    for(const k in S.st) S.st[k] = Math.round(50 + (S.st[k]-50)*((hero && hero.pregSquash) || 0.5));   // у героини с длинным летом шкалы подтягиваются сильнее
   }
   haptic(side==='l'?'light':'medium');
   showDeltas(fx); updateStats();
@@ -702,7 +706,7 @@ function sceneMusic(){
   if(!S) return 'menu';
   if(S.card && S.card.music) return S.card.music;          // можно задать сцене music:'drama'
   const n = parseInt((S.chap||'Глава 1').replace(/\D+/,''), 10) || 1;
-  return CHAP_MUSIC[n-1] || 'love';
+  return ((hero && hero.chapMusic) || CHAP_MUSIC)[n-1] || 'love';
 }
 function setMusic(on){
   musicOn = on; save('music', on);
@@ -1108,7 +1112,7 @@ function lose(endId){
     <div class="meta">${hero.name} дошла до: ${S.chap.split('·')[1]||S.chap} ${isNew?'· <b style="color:#ffc83d">новая концовка!</b>':''}</div>
     <button class="cta gold" id="m-chance">🔁 Второй шанс · ${meta.chances>0 ? `осталось ${meta.chances}` : "⭐ 15"}</button>
     <button class="ghost" id="m-ad">📺 Посмотреть рекламу и вернуться</button>
-    ${chapStart ? `<button class="ghost" id="m-restart">↩️ Начать главу заново${FREE_CHAPS.includes(chapNum(S.chap)) ? '' : subActive() ? ' · 👑' : ' · ⚡' + CHAPTER_COST}</button>` : ''}
+    ${chapStart ? `<button class="ghost" id="m-restart">↩️ Начать главу заново${freeChaps().includes(chapNum(S.chap)) ? '' : subActive() ? ' · 👑' : ' · ⚡' + CHAPTER_COST}</button>` : ''}
     <button class="ghost" id="m-share">📤 Поделиться концовкой</button>
     <button class="ghost" id="m-menu">В меню</button>`);
   document.getElementById('m-chance').onclick = ()=>{ if(meta.chances>0){ meta.chances--; save('meta',meta); rewind(); } else pay('chance1', rewind); };
@@ -1116,7 +1120,7 @@ function lose(endId){
   const rs = document.getElementById('m-restart');
   if(rs) rs.onclick = ()=>{
     const again = ()=>{ S = JSON.parse(JSON.stringify(chapStart)); hist = []; closeModal(); go('game'); buildStats(); nextCard(); toast('↩️ Глава с начала'); };
-    if(FREE_CHAPS.includes(chapNum(S.chap)) || spendEnergy(CHAPTER_COST)) again();
+    if(freeChaps().includes(chapNum(S.chap)) || spendEnergy(CHAPTER_COST)) again();
     else noEnergy(()=>{ if(spendEnergy(CHAPTER_COST)) again(); });
   };
   document.getElementById('m-share').onclick = ()=> share(e);
